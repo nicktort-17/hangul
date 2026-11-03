@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Хангыль">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Хангыль за два дня</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow study column, tab bar on top, each tab is one exercise */
+:root{
+  --bg:#f3f5f8; --card:#ffffff; --ink:#1c2230; --muted:#5f6878; --line:#dde2ea;
+  --red:#b83a32; --red-soft:#f8e3e1; --teal:#17756c; --teal-soft:#dcf1ee; --gold:#a86f08;
+  --hangul:"Gowun Dodum","Noto Sans KR","Malgun Gothic",sans-serif;
+  --ui:"Golos Text","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151c; --card:#1a202a; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2c3441;
+  --red:#ef7f74; --red-soft:#3a2224; --teal:#55c4b6; --teal-soft:#183631; --gold:#e3b04f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151c; --card:#1a202a; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2c3441;
+  --red:#ef7f74; --red-soft:#3a2224; --teal:#55c4b6; --teal-soft:#183631; --gold:#e3b04f; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:26px;margin:0;text-wrap:balance}
+h2{font-size:19px;margin:0 0 6px;text-wrap:balance}
+p{margin:0}
+.k{font-family:var(--hangul)}
+.muted{color:var(--muted)}
+header{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+.plan div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.plan b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:16px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav button{flex:0 0 auto}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 13px}
+button:hover{border-color:var(--muted)}
+button:focus-visible,.tile:focus-visible,.w:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.pri{background:var(--red);color:#fff;border-color:var(--red)}
+button.ok{background:var(--teal);color:#fff;border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+section{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;cursor:pointer;text-align:left}
+.tile .big{font-family:var(--hangul);font-size:38px;line-height:1.1}
+.tile .snd{font-weight:700;color:var(--red)}
+.tile .hint{font-size:12.5px;color:var(--muted);line-height:1.35}
+.tile.tense .snd{color:var(--gold)}
+.note{font-size:14px;background:var(--teal-soft);border-radius:10px;padding:10px 12px}
+.warn{background:var(--red-soft)}
+/* syllable builder */
+.picker{display:flex;flex-wrap:wrap;gap:5px}
+.picker button{font-family:var(--hangul);font-size:20px;padding:4px 0;width:42px}
+.sylout{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.sylout .big{font-family:var(--hangul);font-size:84px;line-height:1}
+.sylout .rd{font-size:26px;font-weight:700;color:var(--red)}
+/* flashcard */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;min-height:250px;justify-content:center}
+.card .front{font-family:var(--hangul);font-size:58px;line-height:1.15;word-break:keep-all}
+.card .front.ru{font-family:var(--ui);font-size:30px;font-weight:600}
+.card .rd{font-size:24px;font-weight:700;color:var(--red)}
+.card .mean{font-size:19px}
+.parts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.parts span{font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.parts span .k{font-size:16px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal);width:0}
+/* reading */
+.list{display:flex;flex-wrap:wrap;gap:8px}
+.w{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:76px}
+.w .k{font-size:26px;line-height:1.2}
+.w .r{font-size:13.5px;font-weight:700;color:var(--red);visibility:hidden}
+.w .m{font-size:12px;color:var(--muted);visibility:hidden;text-align:center;max-width:130px;line-height:1.25}
+.w.open .r,.w.open .m{visibility:visible}
+.w.known{border-color:var(--teal)}
+/* quiz */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:520px}
+.opts button{padding:12px;font-size:16px}
+.opts button.right{background:var(--teal);border-color:var(--teal);color:#fff}
+.opts button.wrong{background:var(--red);border-color:var(--red);color:#fff}
+.score{font-variant-numeric:tabular-nums;font-weight:600}
+.ans{font:inherit;font-size:22px;text-align:center;width:100%;max-width:260px;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.ans:focus{outline:none;border-color:var(--teal)}
+.ans.right{border-color:var(--teal);background:var(--teal-soft)}
+.ans.wrong{border-color:var(--red);background:var(--red-soft)}
+.fb{font-size:17px;font-weight:600;min-height:1.5em}
+.fb.right{color:var(--teal)}.fb.wrong{color:var(--red)}
+.mn{background:var(--teal-soft);border-radius:10px;padding:8px 12px;font-size:15px;max-width:460px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:96px}
+.stats b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12.5px;color:var(--muted)}
+.w.l1,.w.l2{border-color:var(--gold)}
+.w.l3,.w.l4,.w.l5{border-color:var(--teal)}
+.opts button.kw{font-family:var(--hangul);font-size:24px}
+button:disabled{opacity:.5;cursor:default}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+/* телефоны: поля и списки от 16px, иначе iOS увеличивает страницу при вводе */
+input,select{font-size:16px}
+html{-webkit-text-size-adjust:100%}
+button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+@media (hover:none){.kbd{display:none}}
+@media (max-width:520px){
+  body{font-size:16px}
+  h1{font-size:23px}
+  .plan{grid-template-columns:1fr}
+  header > p.muted{font-size:15px}
+  nav{gap:5px;margin-inline:-4px;padding-inline:4px;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{padding:9px 12px;font-size:15px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .tile .big{font-size:34px}
+  .card{padding:22px 14px;min-height:0}
+  .card .front{font-size:46px}
+  .card .front.ru{font-size:25px}
+  .opts{grid-template-columns:1fr}
+  .opts button{padding:14px;font-size:17px}
+  .sylout .big{font-size:68px}
+  .picker button{width:40px;padding:6px 0}
+  .row > button{padding:10px 14px}
+  .row > select{flex:1 1 180px;min-width:0}
+  .ans{max-width:none!important}
+  form.row{flex-direction:column;align-items:stretch}
+  form.row button{padding:12px}
+  .w{min-width:68px;padding:8px 10px}
+  .w .k{font-size:24px}
+}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Хангыль за два дня</h1>
+  <p class="muted">Буквы, слоги и все слова из твоего списка для экзамена (1 курс, 1А). Нажимай на корейские буквы и слова, чтобы услышать их.</p>
+  <div class="plan">
+    <div><b>День 1 · буквы</b>Вкладки «Буквы» и «Слоги». Сначала тест «согласные и обычные гласные», потом «дифтонги». Звук вписываешь сам. Повторяй, пока не будет без ошибок.</div>
+    <div><b>День 2 · слова</b>«Словарь»: учи порции по 6 слов и не пропускай повторения. Потом «Чтение»: читай вслух, затем открывай проверку. В конце «Тест».</div>
+  </div>
+  <p id="voiceNote" class="note warn" hidden>На этом устройстве нет корейского голоса, поэтому озвучка может не работать. Транскрипция показана везде.</p>
+</header>
+
+<nav id="tabs">
+  <button data-tab="letters" class="on">Буквы</button>
+  <button data-tab="syll">Слоги</button>
+  <button data-tab="cards">Словарь</button>
+  <button data-tab="teach">Словарь: режим препода</button>
+  <button data-tab="read">Чтение</button>
+  <button data-tab="test">Тест</button>
+</nav>
+
+<!-- LETTERS -->
+<section id="letters">
+  <div class="note">Корейское слово пишется слогами. Каждый слог это «кубик»: <b>согласная + гласная</b>. Например <span class="k">나</span> = <span class="k">ㄴ</span> (н) + <span class="k">ㅏ</span> (а) = «на». Если слог начинается с гласной, впереди ставится немой кружок <span class="k">ㅇ</span>: <span class="k">아</span> = «а».</div>
+  <div class="row"><button class="pri" id="lqStart">Тест: согласные и обычные гласные</button><button class="pri" id="lqStart2">Тест: дифтонги</button><span class="muted" id="lqBest"></span></div>
+  <div id="lq" class="card" hidden></div>
+  <h2>Согласные</h2>
+  <p class="muted">В начале слова <span class="k">ㄱ ㄷ ㅂ ㅈ</span> звучат глухо (к, т, п, ч), между гласными звонко (г, д, б, дж): <span class="k">가다</span> «када», <span class="k">아기</span> «аги».</p>
+  <div class="grid" id="cons"></div>
+  <h2>Двойные (напряжённые) согласные</h2>
+  <p class="muted">Произносятся резко и сильно, без выдоха воздуха: «кк», «тт», «пп».</p>
+  <div class="grid" id="tense"></div>
+  <h2>Обычные гласные</h2>
+  <p class="muted">Вертикальные гласные пишутся справа от согласной (<span class="k">가</span>), горизонтальные снизу (<span class="k">고</span>).</p>
+  <div class="grid" id="vow"></div>
+  <div class="row"><button class="pri" id="lqStart3">Проверить себя: согласные и обычные гласные</button></div>
+  <h2>Дифтонги</h2>
+  <p class="muted">Вторая чёрточка добавляет «й»: <span class="k">ㅏ</span> а → <span class="k">ㅑ</span> я, <span class="k">ㅗ</span> о → <span class="k">ㅛ</span> ё. Если впереди стоит <span class="k">ㅗ</span> или <span class="k">ㅜ</span>, они звучат как «в»: <span class="k">ㅗ+ㅏ = ㅘ</span> «ва».</p>
+  <div class="grid" id="vow2"></div>
+  <div class="row"><button class="pri" id="lqStart4">Проверить себя: дифтонги</button></div>
+</section>
+
+<!-- SYLLABLES -->
+<section id="syll" hidden>
+  <div class="box">
+    <h2>Собери слог</h2>
+    <p class="muted" style="margin-bottom:10px">Выбери согласную и гласную. Попробуй сначала сам прочитать, что получилось.</p>
+    <div class="sylout" style="margin-bottom:12px"><span class="big" id="sBig">가</span><div><div class="rd" id="sRd">ка / га</div><div class="muted" id="sEq"></div><button id="sSay" style="margin-top:6px">Послушать</button></div></div>
+    <p class="muted" style="font-size:13px;margin-bottom:4px">Согласная</p>
+    <div class="picker" id="pL"></div>
+    <p class="muted" style="font-size:13px;margin:10px 0 4px">Гласная</p>
+    <div class="picker" id="pV"></div>
+  </div>
+  <div class="box">
+    <h2>Прочитай слог</h2>
+    <p class="muted" style="margin-bottom:10px">Случайный слог. Скажи вслух, потом проверь.</p>
+    <div class="sylout"><span class="big" id="rBig">나</span><div><div class="rd" id="rRd" style="visibility:hidden">на</div>
+      <div class="row" style="margin-top:6px"><button id="rShow" class="pri">Проверить</button><button id="rNext">Следующий</button></div></div></div>
+  </div>
+</section>
+
+<!-- VOCAB -->
+<section id="cards" hidden>
+  <div id="vHome" style="display:flex;flex-direction:column;gap:14px">
+    <div class="note"><b>Как это работает.</b> Слова идут порциями по 6. Каждая порция проходит 4 шага: знакомство с ассоциацией, выбор перевода, выбор корейского слова и, наконец, сам вписываешь чтение. Слово с ошибкой возвращается в конец, пока не ответишь верно. Потом слова приходят на повторение через 10 минут, час, 4 часа, 12 часов и сутки. Так они перейдут в долгую память к экзамену.</div>
+    <div class="row"><label for="cSet">Список:</label><select id="cSet"></select></div>
+    <div class="stats" id="vStats"></div>
+    <div class="row"><button class="pri" id="vLearn">Учить новые</button><button class="ok" id="vReview">Повторить</button></div>
+    <p class="muted" id="vNext"></p>
+    <div class="list" id="vWords"></div>
+    <p class="muted" style="font-size:13px">Рамка: серая — новое слово, жёлтая — учишь, зелёная — выучено. Нажми на слово, чтобы подсмотреть.</p>
+  </div>
+  <div id="vStage" hidden style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="justify-content:space-between"><span class="muted score" id="vStep"></span><button id="vQuit">Выйти</button></div>
+    <div class="bar"><i id="vBar"></i></div>
+    <div class="card" id="vCard"></div>
+    <p class="muted" style="font-size:13px" id="vKeys"></p>
+  </div>
+</section>
+
+<!-- TEACHER -->
+<section id="teach" hidden>
+  <div id="pHome" class="box" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Словарь в режиме препода</h2>
+    <p class="muted">Как на паре: тебе называют слово, а ты сам пишешь перевод. Подсказок и вариантов ответа нет. Слова с ошибками в конце спросят ещё раз.</p>
+    <div class="row"><label for="pSet">Список:</label><select id="pSet"></select></div>
+    <div class="row">
+      <label for="pDir">Спрашивают:</label>
+      <select id="pDir"><option value="kr">по-корейски → отвечаю по-русски</option><option value="ru">по-русски → отвечаю по-корейски</option><option value="mix">вперемешку</option></select>
+    </div>
+    <div class="row"><button class="pri" id="pStart">Начать опрос</button></div>
+    <p class="muted" style="font-size:13px">По-корейски можно отвечать корейскими буквами или чтением русскими буквами («нуна»).</p>
+  </div>
+  <div id="pStage" hidden style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="justify-content:space-between"><span class="muted score" id="pStep"></span><button id="pQuit">Выйти</button></div>
+    <div class="bar"><i id="pBar"></i></div>
+    <div class="card" id="pCard"></div>
+    <p class="muted" style="font-size:13px" id="pKeys"></p>
+  </div>
+</section>
+
+<!-- READING -->
+<section id="read" hidden>
+  <div class="note">Так выглядит экзамен: списки слов, которые нужно прочитать вслух. Прочитай слово сам, потом нажми на него, чтобы проверить чтение и перевод.</div>
+  <div class="row"><button id="rdOpen">Показать все ответы</button><button id="rdClose">Скрыть все</button><button id="rdShuffle">Перемешать</button></div>
+  <div id="rdLists" style="display:flex;flex-direction:column;gap:18px"></div>
+</section>
+
+<!-- TEST -->
+<section id="test" hidden>
+  <div class="row">
+    <label for="tSet">Список:</label><select id="tSet"></select>
+    <label for="tMode">Вопрос:</label>
+    <select id="tMode"><option value="mean">что значит слово</option><option value="read">как читается слово</option></select>
+    <button class="pri" id="tStart">Начать (15 вопросов)</button>
+  </div>
+  <div class="card" id="tq"><p class="muted">Выбери список и нажми «Начать».</p></div>
+</section>
+</div>
+
+<script>
+const L = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ".split("");
+const V = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ".split("");
+const T = ["","ㄱ","ㄲ","ㄳ","ㄴ","ㄵ","ㄶ","ㄷ","ㄹ","ㄺ","ㄻ","ㄼ","ㄽ","ㄾ","ㄿ","ㅀ","ㅁ","ㅂ","ㅄ","ㅅ","ㅆ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+// [в начале слова, между гласными]
+const LR = {"ㄱ":["к","г"],"ㄲ":["кк","кк"],"ㄴ":["н","н"],"ㄷ":["т","д"],"ㄸ":["тт","тт"],"ㄹ":["р","р"],"ㅁ":["м","м"],"ㅂ":["п","б"],"ㅃ":["пп","пп"],"ㅅ":["с","с"],"ㅆ":["сс","сс"],"ㅇ":["",""],"ㅈ":["ч","дж"],"ㅉ":["чч","чч"],"ㅊ":["чх","чх"],"ㅋ":["кх","кх"],"ㅌ":["тх","тх"],"ㅍ":["пх","пх"],"ㅎ":["х","х"]};
+// [после согласной, без согласной (с ㅇ)]
+const VR = {"ㅏ":["а","а"],"ㅐ":["э","э"],"ㅑ":["я","я"],"ㅒ":["е","йэ"],"ㅓ":["о","о"],"ㅔ":["э","э"],"ㅕ":["ё","ё"],"ㅖ":["е","йе"],"ㅗ":["о","о"],"ㅘ":["ва","ва"],"ㅙ":["вэ","вэ"],"ㅚ":["вэ","вэ"],"ㅛ":["ё","ё"],"ㅜ":["у","у"],"ㅝ":["во","во"],"ㅞ":["вэ","вэ"],"ㅟ":["ви","ви"],"ㅠ":["ю","ю"],"ㅡ":["ы","ы"],"ㅢ":["и","ый"],"ㅣ":["и","и"]};
+const TR = {"ㄱ":"к","ㄲ":"к","ㄴ":"н","ㄷ":"т","ㄹ":"ль","ㅁ":"м","ㅂ":"п","ㅅ":"т","ㅆ":"т","ㅇ":"нг","ㅈ":"т","ㅊ":"т","ㅋ":"к","ㅌ":"т","ㅍ":"п","ㅎ":"т"};
+
+function split(ch){const c=ch.charCodeAt(0)-0xAC00; if(c<0||c>11171) return null; return {l:L[Math.floor(c/588)],v:V[Math.floor(c%588/28)],t:T[c%28]};}
+function compose(l,v){return String.fromCharCode(0xAC00+(L.indexOf(l)*21+V.indexOf(v))*28);}
+function readWord(w){
+  let out="", prevFinal=true;
+  for(const ch of w){
+    const s=split(ch); if(!s){out+=ch; prevFinal=true; continue;}
+    const first=out==="" || prevFinal===null;
+    const lr=LR[s.l][(out===""||prevFinal)?0:1];
+    let vr=VR[s.v][s.l==="ㅇ"?1:0];
+    out+=lr+vr; if(s.t) out+=TR[s.t]||"";
+    prevFinal=!!s.t;
+  }
+  return out;
+}
+
+const CONS=[
+ ["ㄱ","к / г","Как русская «Г», только зеркально","가"],["ㄴ","н","Уголок, как латинская L: «нос»","나"],
+ ["ㄷ","т / д","ㄴ с крышей","다"],["ㄹ","р","Змейка, «рулит»","라"],["ㅁ","м","Квадрат — закрытый рот: «м-м-м»","마"],
+ ["ㅂ","п / б","Ведро с ручками","바"],["ㅅ","с","Шалаш, свистит: «с-с-с»","사"],["ㅇ","—","В начале слога не читается","아"],
+ ["ㅈ","ч / дж","ㅅ с крышкой сверху","자"],["ㅊ","чх","ㅈ с чёлкой, звук с выдохом","차"],["ㅋ","кх","ㄱ с чертой: «к» с выдохом","카"],
+ ["ㅌ","тх","ㄷ с чертой: «т» с выдохом","타"],["ㅍ","пх","«П» с выдохом","파"],["ㅎ","х","Человечек в шляпе: «х»","하"]];
+const TENSE=[["ㄲ","кк","Двойная ㄱ","까"],["ㄸ","тт","Двойная ㄷ","따"],["ㅃ","пп","Двойная ㅂ","빠"],["ㅆ","сс","Двойная ㅅ","싸"],["ㅉ","чч","Двойная ㅈ","짜"]];
+// обычные гласные
+const VOW=[["ㅏ","а","Чёрточка вправо","아"],["ㅓ","о","Широкое «о», ближе к «а». Чёрточка влево","어"],
+ ["ㅗ","о","Узкое «о», губы трубочкой. Чёрточка вверх","오"],["ㅜ","у","Чёрточка вниз","우"],
+ ["ㅡ","ы","Ровная линия, губы в улыбке","으"],["ㅣ","и","Палочка","이"],["ㅐ","э","ㅏ + ㅣ, но звук один: «э»","애"],["ㅔ","э","ㅓ + ㅣ, звучит как ㅐ","에"]];
+// дифтонги: с «й» и с «в»
+const VOW2=[["ㅑ","я","ㅏ с двумя чёрточками","야"],["ㅕ","ё","ㅓ с двумя чёрточками","여"],["ㅛ","ё","ㅗ с двумя чёрточками","요"],["ㅠ","ю","ㅜ с двумя чёрточками","유"],
+ ["ㅒ","йэ","ㅑ + ㅣ","얘"],["ㅖ","йе","ㅕ + ㅣ","예"],
+ ["ㅘ","ва","ㅗ + ㅏ","와"],["ㅙ","вэ","ㅗ + ㅐ","왜"],["ㅚ","вэ","ㅗ + ㅣ","외"],["ㅝ","во","ㅜ + ㅓ","워"],["ㅞ","вэ","ㅜ + ㅔ","웨"],["ㅟ","ви","ㅜ + ㅣ","위"],["ㅢ","ый","ㅡ + ㅣ","의"]];
+
+const M={
+"구두":"туфли","가다":"идти, ехать","다리":"нога; мост","나비":"бабочка","비누":"мыло","가수":"певец, певица","도시":"город","아이":"ребёнок","우유":"молоко","지도":"карта","모자":"шапка, кепка",
+"아버지":"отец (вежливо)","아빠":"папа","오빠":"старший брат (говорит девушка)","아저씨":"дядя, мужчина","애기":"малыш","아기":"малыш","바지":"брюки","의자":"стул","회사":"фирма, компания","웨이터":"официант",
+"토마토":"помидор","토끼":"заяц, кролик","까치":"сорока","기타":"гитара; прочее","싸다":"дешёвый","쓰다":"писать; горький; использовать","짜다":"солёный","찌다":"варить на пару; полнеть","추워요":"холодно","더워요":"жарко",
+"예쁘다":"красивый","사과":"яблоко; извинение","노래":"песня","지우개":"ластик","외투":"пальто","가게":"магазин","배":"груша; живот; корабль","돼지":"свинья","네":"да","개미":"муравей","과자":"печенье, сладости",
+"쓰레기":"мусор","시계":"часы","카메라":"фотоаппарат","얘기":"разговор, рассказ","새":"птица; новый","왜":"почему","의사":"врач","스웨터":"свитер","가위":"ножницы","귀":"ухо",
+"어머니":"мать (вежливо)","호수":"озеро","기다리다":"ждать","가구":"мебель","사다":"покупать","치마":"юбка","커피":"кофе","누나":"старшая сестра (говорит парень)","가르치다":"учить, преподавать","소":"корова",
+"하다":"делать","피아노":"пианино","크다":"большой","고기":"мясо","다리미":"утюг","기차":"поезд","키":"рост; ключ","포도":"виноград","머리":"голова; волосы","바나나":"банан","사다리":"лестница-стремянка",
+"하마":"бегемот","사자":"лев","라디오":"радио","바다":"море","오다":"приходить","나무":"дерево","뉴스":"новости","야구":"бейсбол","자다":"спать","나누다":"делить","요리사":"повар","여우":"лиса","지도서":"методическое пособие","요가":"йога","서다":"стоять"};
+
+const SETS=[
+ {id:"vocab",name:"Словарь (с переводом)",rows:[["구두","가다","다리","나비","비누","가수","도시","아이","우유","지도"],["모자","아버지","아빠","오빠","아저씨","애기","바지","의자","회사","웨이터"],["토마토","토끼","까치","기타","싸다","쓰다","짜다","찌다","추워요","더워요"]]},
+ {id:"r1",name:"Чтение 1 · гласные ㅐ ㅔ ㅚ ㅟ ㅢ",rows:[["예쁘다","의사","사과","노래"],["지우개","외투","스웨터","가위"],["가게","배","추워요","돼지"],["의자","네","개미","더워요"],["과자","쓰레기","귀","시계"],["카메라","회사"],["얘기","새","애기","왜","웨이터"]]},
+ {id:"r2",name:"Чтение 2",rows:[["어머니","아버지","호수","기다리다","도시","우유","가구","가다","사다","지도"],["치마","커피","누나","가르치다","소","하다","피아노","크다","토마토"],["고기","다리미","구두","바지","기차","키","포도"]]},
+ {id:"r3",name:"Чтение 3",rows:[["고기","머리","다리미","기다리다","누나","바나나","구두","어머니"],["가다","사다리","하마","지도","아버지","사자","라디오"],["가수","바다","오다","나무","바지","호수","도시"]]},
+ {id:"r4",name:"Чтение 4 · ㅑ ㅕ ㅛ ㅠ",rows:[["뉴스","머리","야구","기다리다","자다","바나나","나누다","어머니"],["바다","사다리","모자","아버지","사자","라디오","요리사"],["여우","지도서","바지","요가","서다"]]}
+];
+const allWords=[...new Set(SETS.flatMap(s=>s.rows.flat()))];
+SETS.push({id:"all",name:"Все слова ("+allWords.length+")",rows:[allWords]});
+const setWords=id=>[...new Set(SETS.find(s=>s.id===id).rows.flat())];
+
+/* storage */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* speech */
+let koVoice=null;
+function pickVoice(){if(!("speechSynthesis" in window))return;const vs=speechSynthesis.getVoices();koVoice=vs.find(v=>/^ko/i.test(v.lang))||null;
+  if(vs.length) document.getElementById("voiceNote").hidden=!!koVoice;}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;setTimeout(pickVoice,1500);} else document.getElementById("voiceNote").hidden=false;
+function say(t){if(!("speechSynthesis" in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";if(koVoice)u.voice=koVoice;u.rate=.75;speechSynthesis.speak(u);}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function parts(w){return [...w].map(ch=>{const s=split(ch);return s?`<span><span class="k">${ch}</span> = <span class="k">${s.l==="ㅇ"?"ㅇ":s.l}+${s.v}</span> · ${readWord(ch)}</span>`:""}).join("");}
+
+/* tabs */
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("section").forEach(s=>s.hidden=s.id!==b.dataset.tab);
+  store.set("tab",b.dataset.tab);
+  if(window.appReady){if(b.dataset.tab==="read")rdRender(false);if(b.dataset.tab==="cards"&&!ses)vHome();}});
+const savedTab=store.get("tab","letters");const tb=document.querySelector(`#tabs [data-tab="${savedTab}"]`);if(tb)tb.click();
+
+/* letters */
+function tiles(el,arr,cls){$(el).innerHTML=arr.map(([c,s,h,ex])=>`<button class="tile ${cls||""}" data-say="${ex}"><span class="big">${c}</span><span class="snd">${s}</span><span class="hint">${h}</span><span class="hint">пример: <span class="k">${ex}</span> ${readWord(ex)}</span></button>`).join("");}
+tiles("cons",CONS);tiles("tense",TENSE,"tense");tiles("vow",VOW);tiles("vow2",VOW2);
+document.addEventListener("click",e=>{const t=e.target.closest("[data-say]");if(t)say(t.dataset.say);});
+
+/* letter quiz */
+const toQ=([c,s])=>({c,s,ans:s.split("/").map(x=>x.trim())});
+const LQ=[...CONS.filter(c=>c[0]!=="ㅇ"),...TENSE,...VOW].map(toQ);
+const LQ2=VOW2.map(toQ);
+// э и е считаем одним звуком (ㅐ, ㅔ, ㅖ, ㅒ звучат почти одинаково)
+const norm=x=>x.toLowerCase().replace(/[\s\/,]+/g,"").replace(/э/g,"е");
+function lqCheck(cur,v){v=norm(v);const a=cur.ans.map(norm);return a.includes(v)||v===a.join("")||(a.length>1&&v===a.slice().reverse().join(""));}
+let lq=null;
+function lqBest(){const a=store.get("lqBestBase",null),b=store.get("lqBestDiph",null),t=[];
+  if(a!==null)t.push(`согласные и гласные ${a} из ${LQ.length}`);if(b!==null)t.push(`дифтонги ${b} из ${LQ2.length}`);
+  $("lqBest").textContent=t.length?"Лучший результат: "+t.join(", "):"";}
+lqBest();
+function lqRun(pool,key,label){lq={q:shuffle(pool),i:0,ok:0,miss:[],round:1,checked:false,pool,key,label};$("lq").hidden=false;lqShow();$("lq").scrollIntoView({block:"center"});}
+$("lqStart").onclick=$("lqStart3").onclick=()=>lqRun(LQ,"lqBestBase","Согласные и гласные · ");
+$("lqStart2").onclick=$("lqStart4").onclick=()=>lqRun(LQ2,"lqBestDiph","Дифтонги · ");
+function lqShow(){
+  const box=$("lq"),n=lq.q.length;
+  if(lq.i>=n){
+    if(lq.round===1&&lq.ok>store.get(lq.key,-1))store.set(lq.key,lq.ok);lqBest();
+    const miss=lq.miss;
+    box.innerHTML=`<div class="front ru">${lq.ok} из ${n}</div>`+(miss.length
+      ?`<p class="muted">${lq.round===1?"Ошибки":"Ещё не запомнились"}:</p><div class="parts">${miss.map(m=>`<span><span class="k">${m.c}</span> ${esc(m.s)}</span>`).join("")}</div><div class="row" style="justify-content:center"><button class="pri" id="lqMiss">Повторить ошибки (${miss.length})</button><button id="lqAgain">Все буквы заново</button></div>`
+      :`<p class="muted">${lq.round===1?"Все буквы без ошибок. Отлично!":"Ошибки исправлены. Пройди все буквы ещё раз."}</p><button class="pri" id="lqAgain">Все буквы заново</button>`);
+    $("lqAgain").onclick=()=>lqRun(lq.pool,lq.key,lq.label);
+    if(miss.length)$("lqMiss").onclick=()=>{lq={...lq,q:shuffle(miss),i:0,ok:0,miss:[],round:lq.round+1,checked:false};lqShow();};
+    return;}
+  const cur=lq.q[lq.i];lq.checked=false;
+  box.innerHTML=`<p class="muted score">${lq.label}${lq.round>1?"Работа над ошибками · ":""}${lq.i+1} / ${n} · верно ${lq.ok}</p><div class="front">${cur.c}</div><p class="muted">Впиши русскими буквами, как она звучит</p>
+    <form id="lqForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="lqIn" lang="ru" placeholder="например: а" aria-label="Звук буквы"><button class="pri" id="lqBtn">Проверить</button></form>
+    <p class="fb" id="lqFb"></p><p class="muted" style="font-size:13px">Для ㄱ ㄷ ㅂ ㅈ подойдёт любой из двух звуков.<span class="kbd"> Enter — проверить, ещё раз Enter — дальше.</span></p>`;
+  const inp=$("lqIn");inp.focus();
+  $("lqForm").onsubmit=e=>{e.preventDefault();
+    if(lq.checked){lq.i++;lqShow();return;}
+    if(!inp.value.trim()){inp.focus();return;}
+    lq.checked=true;const right=lqCheck(cur,inp.value);
+    if(right)lq.ok++;else lq.miss.push(cur);
+    inp.readOnly=true;inp.classList.add(right?"right":"wrong");
+    const fb=$("lqFb");fb.className="fb "+(right?"right":"wrong");
+    const ex=[...CONS,...TENSE,...VOW,...VOW2].find(x=>x[0]===cur.c);
+    fb.innerHTML=(right?`Верно: ${esc(cur.s)}`:`Неверно. ${cur.c} = <b>${esc(cur.s)}</b>`)+(ex?`<br><span class="muted" style="font-weight:400;font-size:14px">${esc(ex[2])} · <span class="k">${ex[3]}</span> ${readWord(ex[3])}</span>`:"");
+    $("lqBtn").textContent="Дальше";$("lqBtn").focus();
+    if(ex)say(ex[3]);
+  };
+}
+
+/* syllable builder */
+const PL=["ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ","ㄲ","ㄸ","ㅃ","ㅆ","ㅉ"];
+const PV=["ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ","ㅐ","ㅔ","ㅒ","ㅖ","ㅘ","ㅙ","ㅚ","ㅝ","ㅞ","ㅟ","ㅢ"];
+let sl="ㄱ",sv="ㅏ";
+$("pL").innerHTML=PL.map(c=>`<button data-l="${c}">${c}</button>`).join("");
+$("pV").innerHTML=PV.map(c=>`<button data-v="${c}">${c}</button>`).join("");
+function sUpd(){const s=compose(sl,sv);$("sBig").textContent=s;
+  const a=LR[sl][0]+VR[sv][sl==="ㅇ"?1:0], b=LR[sl][1]+VR[sv][sl==="ㅇ"?1:0];
+  $("sRd").textContent=a===b?a:`${a} / ${b}`;
+  $("sEq").innerHTML=`<span class="k">${sl} + ${sv} = ${s}</span>${a!==b?" · в начале слова / в середине":""}`;
+  document.querySelectorAll("#pL button").forEach(b=>b.classList.toggle("on",b.dataset.l===sl));
+  document.querySelectorAll("#pV button").forEach(b=>b.classList.toggle("on",b.dataset.v===sv));}
+$("pL").onclick=e=>{const b=e.target.closest("button");if(b){sl=b.dataset.l;sUpd();say(compose(sl,sv));}};
+$("pV").onclick=e=>{const b=e.target.closest("button");if(b){sv=b.dataset.v;sUpd();say(compose(sl,sv));}};
+$("sSay").onclick=()=>say(compose(sl,sv));sUpd();
+function rNext(){const l=PL[Math.random()*PL.length|0],v=PV[Math.random()*PV.length|0];const s=compose(l,v);
+  $("rBig").textContent=s;$("rRd").textContent=readWord(s);$("rRd").style.visibility="hidden";}
+$("rShow").onclick=()=>{$("rRd").style.visibility="visible";say($("rBig").textContent);};
+$("rNext").onclick=rNext;rNext();
+
+/* selects */
+["cSet","tSet","pSet"].forEach(id=>$(id).innerHTML=SETS.map(s=>`<option value="${s.id}">${s.name}</option>`).join(""));
+
+/* vocab: порции + интервальные повторения */
+// ассоциации: созвучное русское слово, связанное со смыслом
+const MN={
+"구두":"«Куда ж без туфель?»","가다":"«Когда идём?»","다리":"«Тару несу на ногах через мост»","나비":"«Набили сачок бабочками»","비누":"«Пена от мыла»","가수":"«Касса на концерт певца»",
+"도시":"«Тоска по родному городу»","아이":"«Ай-ай, ребёнок плачет!»","우유":"«У-ю, молочко!» — как говорит малыш","지도":"«Чудо-карта сокровищ»","모자":"«Можа, шапку наденешь?»",
+"아버지":"«Обо всём заботится отец»","아빠":"«Папа» наоборот: ап-па","오빠":"«Оппа!» — старший брат пришёл","아저씨":"«А, дядя Ося!»","애기":"«Эгей, малыш!»","바지":"«Пижамные штаны»",
+"의자":"«Ой, жаль — стул сломался!»","회사":"«Хвастается своей фирмой»","웨이터":"английское waiter","토마토":"«томат»","토끼":"«Ток-ток» — кролик стучит лапкой","까치":"«Качает хвостом сорока»",
+"기타":"«гитара»","싸다":"«Сады распродают дёшево»","쓰다":"«Ссылку записать»","짜다":"«Чад от пересоленной еды»","찌다":"«Чихает пар над кастрюлей»","추워요":"«Чую — холодно!»","더워요":"«Тово… жарко-то как»",
+"예쁘다":"«Йеппи! Какая красота!»","사과":"«Сага о яблоке»","노래":"«Нора поёт песню»","지우개":"«Чистит уголки ластиком»","외투":"«Ветер — надень пальто»","가게":"«Как где? В магазине!»",
+"배":"«Пэ!» — живот после груши","돼지":"«Твой жир, свинья»","네":"«Не?» — наоборот, это «да»","개미":"«Камешки тащит муравей»","과자":"«Квас с печеньем»","쓰레기":"«Срезки — в мусор»",
+"시계":"«Сигнал часов»","카메라":"«камера»","얘기":"«Егэ — рассказ про экзамен»","새":"«Сэ-сэ» — птичка села","왜":"«Вэ? Why? Почему?»","의사":"«Ый, сам не вылечусь — к врачу»",
+"스웨터":"английское sweater","가위":"«Кавычки вырезаю ножницами»","귀":"«Кви-кви» — звенит в ухе","어머니":"«Ом-мама»: мама — главный ом в доме","호수":"«Хочу на озеро»","기다리다":"«Кидаю камешки, жду»",
+"가구":"«Каюта, полная мебели»","사다":"«Сад покупать»","치마":"«Чи, мама, юбка?»","커피":"«кофе» (coffee)","누나":"«Ну, на!» — даёт старшая сестра","가르치다":"«Карты учит читать»","소":"«Со-о-о» — мычит корова",
+"하다":"«Хадить — значит делать»","피아노":"«пианино»","크다":"«Кит — большой»","고기":"«Когти и мясо»","다리미":"«Тари-ми, гладим утюгом»","기차":"«Кича-кича» — стучит поезд","키":"английское key — ключ",
+"포도":"«Подол в винограде»","머리":"«Море в голове»","바나나":"«банан»","사다리":"«В сад по лестнице»","하마":"«Хам-бегемот»","사자":"«Сажа на гриве льва»","라디오":"«радио»","바다":"«Падать в море»",
+"오다":"«Ода тому, кто пришёл»","나무":"«Нам у дерева тень»","뉴스":"английское news","야구":"«Ягуар играет в бейсбол»","자다":"«Чадо спит»","나누다":"«На, нуда — делим пополам»",
+"요리사":"«Ё, рис! — кричит повар»","여우":"«Ёжик и лиса»","지도서":"지도 (карта) + 서 (книга): книга-путеводитель","요가":"«йога»","서다":"«Сода стоит на полке»"};
+const IV=[0,10*6e4,60*6e4,4*36e5,12*36e5,24*36e5];
+let prog=store.get("prog",null);
+if(!prog){prog={};store.get("known",[]).forEach(w=>prog[w]={lv:3,due:Date.now()+IV[3]});store.set("prog",prog);}
+const lvl=w=>(prog[w]||{lv:0}).lv;
+const isDue=w=>lvl(w)>0&&prog[w].due<=Date.now();
+function bump(w,ok){const lv=ok?Math.min(5,lvl(w)+1):1;prog[w]={lv,due:Date.now()+IV[lv]};store.set("prog",prog);}
+// мягкая проверка чтения: звонкие/глухие и э/е не различаем
+const rnorm=x=>x.toLowerCase().replace(/[\s\-–'’.,]/g,"").replace(/ё/g,"е").replace(/э/g,"е").replace(/ый/g,"и").replace(/[йь]е/g,"е").replace(/дж/g,"ч").replace(/ж/g,"ч").replace(/г/g,"к").replace(/д/g,"т").replace(/б/g,"п");
+const fmtMin=ms=>{const m=Math.ceil(ms/6e4);return m<60?`${m} мин`:m<1440?`${Math.round(m/60)} ч`:`${Math.round(m/1440)} дн`;};
+
+function vHome(){
+  const ws=setWords($("cSet").value),nw=ws.filter(w=>!lvl(w)),due=ws.filter(isDue);
+  const learning=ws.filter(w=>lvl(w)>0&&lvl(w)<3).length,learned=ws.filter(w=>lvl(w)>=3).length;
+  $("vStats").innerHTML=`<div><b>${nw.length}</b><span>новых</span></div><div><b>${learning}</b><span>учу</span></div><div><b>${learned}</b><span>выучено</span></div><div><b>${due.length}</b><span>ждут повторения</span></div>`;
+  const L=$("vLearn");L.disabled=!nw.length;L.textContent=nw.length?`Учить новые (${Math.min(6,nw.length)} сл.)`:"Новых слов нет";
+  const R=$("vReview");const started=ws.filter(w=>lvl(w)>0);
+  R.disabled=!started.length;R.textContent=due.length?`Повторить (${due.length})`:"Быстрое повторение";
+  const next=started.filter(w=>!isDue(w)).map(w=>prog[w].due).sort((a,b)=>a-b)[0];
+  $("vNext").textContent=due.length?"Сначала повтори то, что ждёт, потом бери новые слова.":next?`Следующее повторение через ${fmtMin(next-Date.now())}. Пока можно учить новые слова.`:"Начни с первой порции.";
+  $("vWords").innerHTML=ws.map(w=>`<button class="w l${lvl(w)}" data-w="${w}"><span class="k">${w}</span><span class="r">${readWord(w)}</span><span class="m">${esc(M[w]||"")}</span></button>`).join("");
+}
+$("vWords").onclick=e=>{const b=e.target.closest(".w");if(b&&b.classList.toggle("open"))say(b.dataset.w);};
+$("cSet").value=store.get("cSet","vocab");
+$("cSet").onchange=()=>{store.set("cSet",$("cSet").value);vHome();};
+$("vLearn").onclick=()=>startSes(setWords($("cSet").value).filter(w=>!lvl(w)).slice(0,6),"new");
+$("vReview").onclick=()=>{const ws=setWords($("cSet").value),due=ws.filter(isDue);
+  startSes(due.length?due:ws.filter(w=>lvl(w)>0).sort((a,b)=>lvl(a)-lvl(b)||prog[a].due-prog[b].due).slice(0,10),"rev");};
+$("vQuit").onclick=()=>{ses=null;$("vStage").hidden=true;$("vHome").hidden=false;vHome();};
+setInterval(()=>{if(!$("cards").hidden&&!$("vHome").hidden)vHome();},30000);
+
+let ses=null;
+const STEP={intro:"шаг 1 · знакомство",mc:"шаг 2 · что значит слово",rev:"шаг 3 · найди корейское слово",type:"шаг 4 · впиши чтение"};
+function startSes(words,kind){
+  if(!words.length)return;
+  const q=[];
+  if(kind==="new"){words.forEach(w=>q.push({w,k:"intro"}));["mc","rev","type"].forEach(k=>shuffle(words).forEach(w=>q.push({w,k})));}
+  else{shuffle(words).forEach(w=>q.push({w,k:"type"}));shuffle(words).forEach(w=>q.push({w,k:Math.random()<.5?"mc":"rev"}));}
+  ses={words,kind,q,done:0,total:q.length,fail:new Set(),busy:false};
+  $("vHome").hidden=true;$("vStage").hidden=false;vTask();
+}
+function optsFor(w,f){const a=f(w);const pool=[...new Set(shuffle(allWords.filter(x=>x!==w&&M[x]!==M[w])).map(f))].filter(x=>x!==a);return shuffle([a,...pool.slice(0,3)]);}
+function vTask(){
+  if(!ses.q.length)return vFinish();
+  const {w,k}=ses.q[0],c=$("vCard");ses.busy=false;
+  $("vStep").textContent=(ses.kind==="new"?"Новые слова · ":"Повторение · ")+(ses.kind==="new"?STEP[k]:STEP[k].replace(/шаг \d · /,""));
+  $("vBar").style.width=(ses.done/ses.total*100)+"%";
+  const full=`<div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div><div class="parts">${parts(w)}</div>${MN[w]?`<div class="mn"><b>Запомни:</b> ${esc(MN[w])}</div>`:""}`;
+  if(k==="intro"){
+    c.innerHTML=`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div>${full}<button class="pri" id="vGo">Запомнил, дальше</button>`;
+    $("vKeys").textContent="Прочитай слово вслух 2–3 раза и представь ассоциацию. Enter — дальше.";
+    say(w);$("vGo").onclick=()=>vResult(true);$("vGo").focus();return;}
+  if(k==="mc"||k==="rev"){
+    const rev=k==="rev",f=rev?x=>x:x=>M[x],ans=f(w),o=optsFor(w,f);
+    c.innerHTML=(rev?`<div class="front ru">${esc(M[w])}</div>`:`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div>`)+
+      `<div class="opts">${o.map((x,i)=>`<button class="${rev?"kw":""}" data-i="${i}">${esc(x)}</button>`).join("")}</div><div id="vFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+    $("vKeys").textContent="Клавиши 1–4 выбирают ответ.";
+    if(!rev)say(w);
+    c.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+      if(ses.busy)return;ses.busy=true;const ok=o[+b.dataset.i]===ans;
+      c.querySelectorAll(".opts button").forEach(x=>{x.disabled=true;if(o[+x.dataset.i]===ans)x.classList.add("right")});
+      if(!ok){b.classList.add("wrong");$("vFb").innerHTML=(rev?`<div class="front" style="font-size:40px">${w}</div>`:"")+full+`<button class="pri" id="vGo">Понятно, дальше</button>`;$("vGo").onclick=()=>vResult(false);$("vGo").focus();}
+      else setTimeout(()=>vResult(true),650);
+      say(w);});
+    return;}
+  // type
+  c.innerHTML=`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это читается? Напиши русскими буквами.</p>
+    <form id="vForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="vIn" lang="ru" aria-label="Чтение слова"><button class="pri" id="vBtn">Проверить</button></form><div id="vFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  $("vKeys").textContent="Звонкие и глухие (к/г, т/д, п/б, ч/дж) засчитываются оба. Enter — проверить, ещё Enter — дальше.";
+  const inp=$("vIn");inp.focus();let checked=null;
+  $("vForm").onsubmit=e=>{e.preventDefault();
+    if(checked!==null)return vResult(checked);
+    if(!inp.value.trim())return;
+    checked=rnorm(inp.value)===rnorm(readWord(w));
+    inp.readOnly=true;inp.classList.add(checked?"right":"wrong");
+    $("vFb").innerHTML=`<p class="fb ${checked?"right":"wrong"}">${checked?"Верно":"Неверно"}</p>`+full;
+    $("vBtn").textContent="Дальше";$("vBtn").focus();say(w);};
+}
+function vResult(ok){
+  if(!ses)return;const t=ses.q.shift();
+  if(ok)ses.done++;else{ses.fail.add(t.w);ses.q.splice(Math.min(3,ses.q.length),0,t);}
+  vTask();
+}
+function vFinish(){
+  const now=Date.now();
+  if(ses.kind==="new")ses.words.forEach(w=>prog[w]={lv:1,due:now+IV[1]});
+  else ses.words.forEach(w=>bump(w,!ses.fail.has(w)));
+  store.set("prog",prog);
+  $("vBar").style.width="100%";$("vKeys").textContent="";
+  const fail=[...ses.fail],kind=ses.kind;
+  $("vStep").textContent=kind==="new"?"Порция пройдена":"Повторение пройдено";
+  $("vCard").innerHTML=`<div class="front ru">${kind==="new"?"6 слов в копилке":"Готово"}</div>
+    <p class="muted">${kind==="new"?"Первое повторение этих слов через 10 минут. Пока возьми следующую порцию.":fail.length?"Слова с ошибками вернутся через 10 минут, остальные позже.":"Все без ошибок. Следующее повторение будет позже."}</p>
+    ${fail.length?`<p class="muted">Были ошибки:</p><div class="parts">${fail.map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div>`:""}
+    <div class="row" style="justify-content:center"><button class="pri" id="vMore">${kind==="new"?"Следующая порция":"К словарю"}</button>${kind==="new"?`<button id="vBack">К словарю</button>`:""}</div>`;
+  if(kind==="new"&&ses.words.length<6)$("vCard").querySelector(".front").textContent=`${ses.words.length} сл. в копилке`;
+  ses=null;
+  $("vMore").onclick=()=>{if(kind==="new"){const nw=setWords($("cSet").value).filter(w=>!lvl(w)).slice(0,6);if(nw.length)return startSes(nw,"new");}$("vQuit").click();};
+  if($("vBack"))$("vBack").onclick=()=>$("vQuit").click();
+  $("vMore").focus();
+}
+document.addEventListener("keydown",e=>{
+  if(!ses||$("cards").hidden||$("vStage").hidden||e.target.tagName==="INPUT"||e.target.tagName==="SELECT")return;
+  const b=$("vCard").querySelectorAll(".opts button:not(:disabled)");
+  if(/^[1-4]$/.test(e.key)&&b.length){const x=$("vCard").querySelector(`.opts button[data-i="${+e.key-1}"]`);if(x&&!x.disabled)x.click();}
+});
+
+/* режим препода: перевод вводится вручную */
+// другие допустимые переводы
+const ALT={"구두":["обувь","ботинки"],"가다":["ехать"],"가수":["певица"],"아이":["малыш","дитя"],"모자":["шляпа","кепка","шапка"],"아버지":["отец","папа"],"아빠":["отец"],"오빠":["брат","старший брат"],
+"아저씨":["мужчина","дядька"],"애기":["ребенок","младенец"],"바지":["штаны"],"회사":["компания","фирма"],"토끼":["кролик"],"짜다":["соленый"],"싸다":["дешево"],"추워요":["холодно","мне холодно"],"더워요":["жарко","мне жарко"],
+"예쁘다":["красивая","красиво","симпатичный"],"사과":["извинение","яблоки"],"외투":["куртка","верхняя одежда"],"가게":["лавка"],"배":["живот","корабль","лодка"],"과자":["печенье","сладости","печеньки"],"카메라":["камера"],
+"새":["новый"],"어머니":["мама","мать"],"누나":["сестра","старшая сестра"],"가르치다":["обучать","преподавать"],"소":["бык"],"크다":["большой","крупный"],"키":["ключ"],"머리":["волосы"],"사다리":["лестница","стремянка"],
+"지도서":["пособие","методичка","методическое пособие"],"나누다":["разделить"],"기다리다":["подождать"],"다리":["мост"],"쓰다":["горький","использовать"],"찌다":["полнеть","готовить на пару"],"기타":["прочее","другое"],"사다":["купить"],"오다":["прийти"]};
+const tnorm=x=>x.toLowerCase().replace(/ё/g,"е").replace(/\(.*?\)/g,"").replace(/[^а-яa-z\s-]/g,"").replace(/\s+/g," ").trim();
+function lev(a,b){const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t;}}return d[b.length];}
+function ruOk(w,v){const vars=[...M[w].split(/[;,]/),...(ALT[w]||[])].map(tnorm).filter(Boolean);
+  return v.split(/[;,/]/).map(tnorm).filter(Boolean).some(x=>vars.some(a=>a===x||lev(a,x)<=(a.length>=7?2:a.length>=4?1:0)));}
+function krOk(w,v){const s=v.replace(/\s/g,"");if(/[가-힣]/.test(s))return s===w||(w==="애기"&&s==="아기");return rnorm(s)===rnorm(readWord(w));}
+let pq=null;
+$("pSet").value=store.get("pSet","vocab");$("pSet").onchange=()=>store.set("pSet",$("pSet").value);
+$("pStart").onclick=()=>{const dir=$("pDir").value,ws=shuffle(setWords($("pSet").value));
+  pq={q:ws.map(w=>({w,d:dir==="mix"?(Math.random()<.5?"kr":"ru"):dir})),i:0,ok:0,miss:[],round:1};
+  $("pHome").hidden=true;$("pStage").hidden=false;pShow();};
+$("pQuit").onclick=()=>{pq=null;pf=null;$("pStage").hidden=true;$("pHome").hidden=false;};
+function pShow(){
+  const c=$("pCard"),n=pq.q.length;$("pBar").style.width=(pq.i/n*100)+"%";
+  if(pq.i>=n){
+    $("pStep").textContent="Режим препода · итог";$("pKeys").textContent="";
+    c.innerHTML=`<div class="front ru">${pq.ok} из ${n}</div>`+(pq.miss.length
+      ?`<p class="muted">Повтори эти слова:</p><div class="parts">${pq.miss.map(t=>`<span><span class="k">${t.w}</span> ${readWord(t.w)} · ${esc(M[t.w])}</span>`).join("")}</div><div class="row" style="justify-content:center"><button class="pri" id="pFix">Работа над ошибками (${new Set(pq.miss.map(t=>t.w)).size})</button><button id="pAgain">Просто спросить ещё раз</button><button id="pToHome">Новый опрос</button></div><p class="muted" style="font-size:13px">Работа над ошибками: все эти слова вместе проходят 4 шага, как в обычном словаре, а потом препод спрашивает их снова.</p>`
+      :`<p class="muted">${pq.round===1?"Ни одной ошибки. Препод доволен!":"Все ошибки исправлены."}</p><button class="pri" id="pToHome">Новый опрос</button>`);
+    if($("pAgain"))$("pAgain").onclick=()=>{pq={q:shuffle(pq.miss),i:0,ok:0,miss:[],round:pq.round+1};pShow();};
+    if($("pFix"))$("pFix").onclick=()=>pFixStart(pq.miss);
+    $("pToHome").onclick=()=>$("pQuit").click();$("pToHome").focus();return;}
+  const {w,d}=pq.q[pq.i];
+  $("pStep").textContent=`Режим препода${pq.round>1?" · ошибки":""} · ${pq.i+1} / ${n} · верно ${pq.ok}`;
+  c.innerHTML=(d==="kr"?`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это по-русски?</p>`
+      :`<div class="front ru">${esc(M[w])}</div><p class="muted">Как это по-корейски?</p>`)+
+    `<form id="pForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="pIn" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri" id="pBtn">Проверить</button></form><div id="pFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  $("pKeys").textContent=d==="kr"?"Достаточно одного значения. Мелкие опечатки и окончания (красивый/красивая) засчитываются.":"Пиши корейскими буквами или чтением русскими буквами. Enter — проверить, ещё раз Enter — дальше.";
+  if(d==="kr")say(w);
+  const inp=$("pIn");inp.focus();let res=null;
+  const next=ok=>{if(ok)pq.ok++;else pq.miss.push(pq.q[pq.i]);pq.i++;pShow();};
+  $("pForm").onsubmit=e=>{e.preventDefault();
+    if(res!==null)return next(res);
+    if(!inp.value.trim())return;
+    res=d==="kr"?ruOk(w,inp.value):krOk(w,inp.value);
+    inp.readOnly=true;inp.classList.add(res?"right":"wrong");
+    $("pFb").innerHTML=`<p class="fb ${res?"right":"wrong"}">${res?"Верно":"Неверно"}</p><div class="front" style="font-size:40px">${w}</div><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div>`+
+      (MN[w]&&!res?`<div class="mn"><b>Запомни:</b> ${esc(MN[w])}</div>`:"")+(res?"":`<button id="pOver">Мой ответ тоже верный, засчитать</button>`);
+    if($("pOver"))$("pOver").onclick=()=>next(true);
+    $("pBtn").textContent="Дальше";$("pBtn").focus();say(w);};
+}
+
+/* работа над ошибками в режиме препода: 4 шага, как в обычном словаре */
+let pf=null;
+const PFSTEP={intro:"шаг 1 · вспоминаем слово",mc:"шаг 2 · что значит слово",rev:"шаг 3 · найди корейское слово",ask:"шаг 4 · препод спрашивает снова"};
+function pFixStart(miss){
+  const ws=[...new Map(miss.map(t=>[t.w,{w:t.w,d:t.d}])).values()],q=[];
+  ws.forEach(t=>q.push({...t,k:"intro"}));["mc","rev","ask"].forEach(k=>shuffle(ws).forEach(t=>q.push({...t,k})));
+  pf={q,done:0,total:q.length,words:ws};pq=null;pFixShow();
+}
+function pFixNext(ok){if(!pf)return;const t=pf.q.shift();if(ok)pf.done++;else pf.q.splice(Math.min(3,pf.q.length),0,t);pFixShow();}
+function pFixShow(){
+  const c=$("pCard");$("pBar").style.width=(pf.done/pf.total*100)+"%";
+  if(!pf.q.length){
+    $("pStep").textContent="Работа над ошибками пройдена";$("pKeys").textContent="";
+    const ws=pf.words;pf=null;
+    c.innerHTML=`<div class="front ru">Ошибки исправлены</div><p class="muted">Чтобы закрепить, пусть препод спросит эти слова ещё раз, уже без подсказок.</p><div class="row" style="justify-content:center"><button class="pri" id="pfAsk">Опросить эти слова (${ws.length})</button><button id="pToHome">Новый опрос</button></div>`;
+    $("pfAsk").onclick=()=>{pq={q:shuffle(ws),i:0,ok:0,miss:[],round:2};pShow();};
+    $("pToHome").onclick=()=>$("pQuit").click();$("pfAsk").focus();return;}
+  const {w,d,k}=pf.q[0];
+  $("pStep").textContent="Работа над ошибками · "+PFSTEP[k];
+  const full=`<div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div><div class="parts">${parts(w)}</div>${MN[w]?`<div class="mn"><b>Запомни:</b> ${esc(MN[w])}</div>`:""}`;
+  if(k==="intro"){
+    c.innerHTML=`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div>${full}<button class="pri" id="pfGo">Дальше</button>`;
+    $("pKeys").textContent="Прочитай слово вслух 2–3 раза и представь ассоциацию. Enter — дальше.";
+    say(w);$("pfGo").onclick=()=>pFixNext(true);$("pfGo").focus();return;}
+  if(k==="mc"||k==="rev"){
+    const rev=k==="rev",f=rev?x=>x:x=>M[x],ans=f(w),o=optsFor(w,f);let busy=false;
+    c.innerHTML=(rev?`<div class="front ru">${esc(M[w])}</div>`:`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div>`)+
+      `<div class="opts">${o.map((x,i)=>`<button class="${rev?"kw":""}" data-i="${i}">${esc(x)}</button>`).join("")}</div><div id="pfFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+    $("pKeys").textContent="Клавиши 1–4 выбирают ответ.";
+    if(!rev)say(w);
+    c.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+      if(busy)return;busy=true;const ok=o[+b.dataset.i]===ans;
+      c.querySelectorAll(".opts button").forEach(x=>{x.disabled=true;if(o[+x.dataset.i]===ans)x.classList.add("right")});
+      if(!ok){b.classList.add("wrong");$("pfFb").innerHTML=(rev?`<div class="front" style="font-size:40px">${w}</div>`:"")+full+`<button class="pri" id="pfGo">Понятно, дальше</button>`;$("pfGo").onclick=()=>pFixNext(false);$("pfGo").focus();}
+      else setTimeout(()=>pFixNext(true),650);
+      say(w);});
+    return;}
+  // ask: как в опросе, без подсказок
+  c.innerHTML=(d==="kr"?`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это по-русски?</p>`
+      :`<div class="front ru">${esc(M[w])}</div><p class="muted">Как это по-корейски?</p>`)+
+    `<form id="pfForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="pfIn" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri" id="pfBtn">Проверить</button></form><div id="pfFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  $("pKeys").textContent="Enter — проверить, ещё раз Enter — дальше. Если ошибёшься, слово вернётся через пару заданий.";
+  if(d==="kr")say(w);
+  const inp=$("pfIn");inp.focus();let res=null;
+  $("pfForm").onsubmit=e=>{e.preventDefault();
+    if(res!==null)return pFixNext(res);
+    if(!inp.value.trim())return;
+    res=d==="kr"?ruOk(w,inp.value):krOk(w,inp.value);
+    inp.readOnly=true;inp.classList.add(res?"right":"wrong");
+    $("pfFb").innerHTML=`<p class="fb ${res?"right":"wrong"}">${res?"Верно":"Неверно"}</p><div class="front" style="font-size:40px">${w}</div><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div>`+(res?"":`<button id="pfOver">Мой ответ тоже верный, засчитать</button>`);
+    if($("pfOver"))$("pfOver").onclick=()=>pFixNext(true);
+    $("pfBtn").textContent="Дальше";$("pfBtn").focus();say(w);};
+}
+document.addEventListener("keydown",e=>{
+  if(!pf||$("teach").hidden||e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||!/^[1-4]$/.test(e.key))return;
+  const x=$("pCard").querySelector(`.opts button[data-i="${+e.key-1}"]`);if(x&&!x.disabled)x.click();
+});
+vHome();
+
+/* reading */
+function rdRender(mix){
+  $("rdLists").innerHTML=SETS.filter(s=>s.id!=="all").map(s=>{
+    const words=s.rows.flat();const list=mix?shuffle(words):words;
+    return `<div class="box"><h2>${s.name}</h2><div class="list" style="margin-top:8px">${list.map(w=>`<button class="w${lvl(w)>=3?" known":""}" data-w="${w}"><span class="k">${w}</span><span class="r">${readWord(w)}</span><span class="m">${esc(M[w]||"")}</span></button>`).join("")}</div></div>`}).join("");
+}
+$("rdLists").onclick=e=>{const b=e.target.closest(".w");if(!b)return;const open=b.classList.toggle("open");if(open)say(b.dataset.w);};
+$("rdOpen").onclick=()=>document.querySelectorAll(".w").forEach(b=>b.classList.add("open"));
+$("rdClose").onclick=()=>document.querySelectorAll(".w").forEach(b=>b.classList.remove("open"));
+$("rdShuffle").onclick=()=>rdRender(true);
+rdRender(false);
+
+/* test */
+let tq=null;
+$("tStart").onclick=()=>{const w=setWords($("tSet").value);tq={q:shuffle(w).slice(0,15),i:0,ok:0,mode:$("tMode").value,pool:allWords,miss:[]};tShow();};
+function tShow(){
+  const box=$("tq"),n=tq.q.length;
+  if(tq.i>=n){box.innerHTML=`<div class="front ru">${tq.ok} из ${n}</div>${tq.miss.length?`<p class="muted">Повтори эти слова:</p><div class="parts">${tq.miss.map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div>`:`<p class="muted">Без ошибок!</p>`}<button class="pri" id="tAgain">Ещё раз</button>`;
+    $("tAgain").onclick=()=>$("tStart").click();return;}
+  const w=tq.q[tq.i],f=tq.mode==="mean"?x=>M[x]:x=>readWord(x),ans=f(w);
+  const wrong=shuffle([...new Set(tq.pool.filter(x=>x!==w).map(f))].filter(x=>x!==ans)).slice(0,3);
+  const opts=shuffle([ans,...wrong]);
+  box.innerHTML=`<p class="muted score">${tq.i+1} / ${n} · верно ${tq.ok}</p><div class="front">${w}</div><p class="muted">${tq.mode==="mean"?"Что значит это слово?":"Как читается это слово?"}</p><div class="opts">${opts.map(o=>`<button data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  box.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+    const right=b.dataset.o===ans;if(right)tq.ok++;else tq.miss.push(w);
+    box.querySelectorAll(".opts button").forEach(x=>{x.disabled=true;if(x.dataset.o===ans)x.classList.add("right")});
+    if(!right)b.classList.add("wrong");say(w);
+    setTimeout(()=>{tq.i++;tShow()},right?800:1800);});
+}
+/* телефон: убираем подсказки про клавиатуру и не прячем поле ввода под экранной клавиатурой */
+if(matchMedia("(hover:none)").matches){
+  ["vKeys","pKeys"].forEach(id=>{const el=$(id);new MutationObserver(()=>{
+    const t=el.textContent.split(/(?<=[.!])\s+/).filter(s=>!/Enter|Клавиш|Пробел/.test(s)).join(" ");
+    if(t!==el.textContent)el.textContent=t;}).observe(el,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("ans"))setTimeout(()=>e.target.scrollIntoView({block:"center",behavior:"smooth"}),300);});
+}
+window.appReady=true;
+</script>
+
+</body>
+</html>
