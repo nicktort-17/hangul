@@ -103,6 +103,24 @@ section{display:flex;flex-direction:column;gap:14px}
 .w.l3,.w.l4,.w.l5{border-color:var(--teal)}
 .opts button.kw{font-family:var(--hangul);font-size:24px}
 button:disabled{opacity:.5;cursor:default}
+/* таймер ответа */
+.tbar{width:100%;max-width:340px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.tbar i{display:block;height:100%;width:100%;background:var(--gold)}
+/* похожие слова */
+.sims{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sim{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.sim .list{gap:6px}
+.sim > button{align-self:flex-start}
+.gone{color:var(--muted);letter-spacing:.2em}
+/* прогресс */
+.pr{display:flex;flex-direction:column;gap:6px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;font-size:14px}
+.prow .pb{grid-column:1 / -1}
+.pb{height:8px;background:var(--line);border-radius:4px;overflow:hidden;display:flex}
+.pb i{display:block;height:100%}
+.pb .g{background:var(--teal)}.pb .y{background:var(--gold)}
+.num{font-variant-numeric:tabular-nums}
+.hist{display:flex;flex-direction:column;gap:4px;font-size:14px;font-variant-numeric:tabular-nums}
 select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 /* телефоны: поля и списки от 16px, иначе iOS увеличивает страницу при вводе */
 input,select{font-size:16px}
@@ -143,7 +161,7 @@ button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulatio
   <p class="muted">Буквы, слоги и все слова из твоего списка для экзамена (1 курс, 1А). Нажимай на корейские буквы и слова, чтобы услышать их.</p>
   <div class="plan">
     <div><b>День 1 · буквы</b>Вкладки «Буквы» и «Слоги». Сначала тест «согласные и обычные гласные», потом «дифтонги». Звук вписываешь сам. Повторяй, пока не будет без ошибок.</div>
-    <div><b>День 2 · слова</b>«Словарь»: учи порции по 6 слов и не пропускай повторения. Потом «Чтение»: читай вслух, затем открывай проверку. В конце «Тест».</div>
+    <div><b>День 2 · слова</b>«Словарь»: учи порции по 6 слов и не пропускай повторения. Потом «Чтение» и «Похожие слова». В конце «Экзамен»: это генеральная репетиция. Что осталось подтянуть, видно во вкладке «Прогресс».</div>
   </div>
   <p id="voiceNote" class="note warn" hidden>На этом устройстве нет корейского голоса, поэтому озвучка может не работать. Транскрипция показана везде.</p>
 </header>
@@ -153,8 +171,11 @@ button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulatio
   <button data-tab="syll">Слоги</button>
   <button data-tab="cards">Словарь</button>
   <button data-tab="teach">Словарь: режим препода</button>
+  <button data-tab="sim">Похожие слова</button>
   <button data-tab="read">Чтение</button>
   <button data-tab="test">Тест</button>
+  <button data-tab="exam">Экзамен</button>
+  <button data-tab="progress">Прогресс</button>
 </nav>
 
 <!-- LETTERS -->
@@ -226,8 +247,13 @@ button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulatio
       <label for="pDir">Спрашивают:</label>
       <select id="pDir"><option value="kr">по-корейски → отвечаю по-русски</option><option value="ru">по-русски → отвечаю по-корейски</option><option value="mix">вперемешку</option></select>
     </div>
+    <div class="row">
+      <label for="pTime">Время на ответ:</label>
+      <select id="pTime"><option value="0">без ограничения</option><option value="10">10 секунд</option><option value="7">7 секунд</option><option value="5">5 секунд</option></select>
+    </div>
     <div class="row"><button class="pri" id="pStart">Начать опрос</button></div>
-    <p class="muted" style="font-size:13px">По-корейски можно отвечать корейскими буквами или чтением русскими буквами («нуна»).</p>
+    <p class="muted" id="pMsg" hidden></p>
+    <p class="muted" style="font-size:13px">По-корейски можно отвечать корейскими буквами или чтением русскими буквами («нуна»). С таймером, как на паре: не успел — ответ не засчитан. Список «Мои трудные слова» собирается сам из твоих ошибок во всех режимах.</p>
   </div>
   <div id="pStage" hidden style="display:flex;flex-direction:column;gap:10px">
     <div class="row" style="justify-content:space-between"><span class="muted score" id="pStep"></span><button id="pQuit">Выйти</button></div>
@@ -239,6 +265,12 @@ button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulatio
 
 <!-- READING -->
 <section id="read" hidden>
+  <div class="box" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Чтение на время</h2>
+    <p class="muted">Слово появляется на пару секунд и исчезает. Успей прочитать его и впиши чтение русскими буквами. Так тренируется беглое чтение, а не разбор по буквам.</p>
+    <div class="row"><label for="trTime">Слово видно:</label><select id="trTime"><option value="3">3 секунды</option><option value="2" selected>2 секунды</option><option value="1.2">1 секунду</option></select><button class="pri" id="trStart">Начать (15 слов)</button></div>
+    <div class="card" id="trCard" hidden></div>
+  </div>
   <div class="note">Так выглядит экзамен: списки слов, которые нужно прочитать вслух. Прочитай слово сам, потом нажми на него, чтобы проверить чтение и перевод.</div>
   <div class="row"><button id="rdOpen">Показать все ответы</button><button id="rdClose">Скрыть все</button><button id="rdShuffle">Перемешать</button></div>
   <div id="rdLists" style="display:flex;flex-direction:column;gap:18px"></div>
@@ -253,6 +285,37 @@ button,.w,.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulatio
     <button class="pri" id="tStart">Начать (15 вопросов)</button>
   </div>
   <div class="card" id="tq"><p class="muted">Выбери список и нажми «Начать».</p></div>
+</section>
+
+<!-- SIMILAR -->
+<section id="sim" hidden>
+  <div class="note">Пары слов, которые легко спутать. Сначала посмотри, чем они отличаются, потом потренируй каждую группу. В конце пройди всё вперемешку.</div>
+  <div class="row"><button class="pri" id="smAll">Все пары вперемешку (20 вопросов)</button></div>
+  <div class="card" id="smCard" hidden></div>
+  <div class="sims" id="simList"></div>
+</section>
+
+<!-- EXAM -->
+<section id="exam" hidden>
+  <div id="exHome" class="box" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Генеральная репетиция экзамена</h2>
+    <p class="muted"><b>Часть 1.</b> 10 слов из списков для чтения. Читаешь вслух, открываешь ответ и честно отмечаешь, прочитал или сбился.</p>
+    <p class="muted"><b>Часть 2.</b> 20 вопросов препода вперемешку: слово по-корейски или по-русски, перевод пишешь сам.</p>
+    <div class="row"><label for="exTime">Время на ответ во 2 части:</label><select id="exTime"><option value="10" selected>10 секунд</option><option value="7">7 секунд</option><option value="5">5 секунд</option><option value="0">без ограничения</option></select></div>
+    <div class="row"><button class="pri" id="exStart">Начать экзамен</button></div>
+    <div id="exHist"></div>
+  </div>
+  <div id="exStage" hidden style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="justify-content:space-between"><span class="muted score" id="exStep"></span><button id="exQuit">Выйти</button></div>
+    <div class="bar"><i id="exBar"></i></div>
+    <div class="card" id="exCard"></div>
+    <p class="muted" style="font-size:13px" id="exKeys"></p>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<section id="progress" hidden>
+  <div id="prBox" style="display:flex;flex-direction:column;gap:14px"></div>
 </section>
 </div>
 
@@ -316,7 +379,9 @@ const SETS=[
 ];
 const allWords=[...new Set(SETS.flatMap(s=>s.rows.flat()))];
 SETS.push({id:"all",name:"Все слова ("+allWords.length+")",rows:[allWords]});
-const setWords=id=>[...new Set(SETS.find(s=>s.id===id).rows.flat())];
+const setWords=id=>id==="hard"?hardWords():[...new Set(SETS.find(s=>s.id===id).rows.flat())];
+// слова только из списков для чтения
+const RD_WORDS=[...new Set(SETS.filter(s=>/^r\d/.test(s.id)).flatMap(s=>s.rows.flat()))];
 
 /* storage */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -338,7 +403,9 @@ $("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
   document.querySelectorAll("section").forEach(s=>s.hidden=s.id!==b.dataset.tab);
   store.set("tab",b.dataset.tab);
-  if(window.appReady){if(b.dataset.tab==="read")rdRender(false);if(b.dataset.tab==="cards"&&!ses)vHome();}});
+  if(window.appReady){if(b.dataset.tab==="read")rdRender(false);if(b.dataset.tab==="cards"&&!ses)vHome();
+    if(b.dataset.tab==="progress")prRender();if(b.dataset.tab==="exam"&&!ex)exHist();}});
+const goTab=id=>document.querySelector(`#tabs [data-tab="${id}"]`).click();
 const savedTab=store.get("tab","letters");const tb=document.querySelector(`#tabs [data-tab="${savedTab}"]`);if(tb)tb.click();
 
 /* letters */
@@ -374,7 +441,7 @@ function lqShow(){
     return;}
   const cur=lq.q[lq.i];lq.checked=false;
   box.innerHTML=`<p class="muted score">${lq.label}${lq.round>1?"Работа над ошибками · ":""}${lq.i+1} / ${n} · верно ${lq.ok}</p><div class="front">${cur.c}</div><p class="muted">Впиши русскими буквами, как она звучит</p>
-    <form id="lqForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="lqIn" lang="ru" placeholder="например: а" aria-label="Звук буквы"><button class="pri" id="lqBtn">Проверить</button></form>
+    <form id="lqForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" id="lqIn" lang="ru" placeholder="например: а" aria-label="Звук буквы"><button class="pri" id="lqBtn">Проверить</button></form>
     <p class="fb" id="lqFb"></p><p class="muted" style="font-size:13px">Для ㄱ ㄷ ㅂ ㅈ подойдёт любой из двух звуков.<span class="kbd"> Enter — проверить, ещё раз Enter — дальше.</span></p>`;
   const inp=$("lqIn");inp.focus();
   $("lqForm").onsubmit=e=>{e.preventDefault();
@@ -413,6 +480,14 @@ $("rNext").onclick=rNext;rNext();
 
 /* selects */
 ["cSet","tSet","pSet"].forEach(id=>$(id).innerHTML=SETS.map(s=>`<option value="${s.id}">${s.name}</option>`).join(""));
+
+["tSet","pSet"].forEach(id=>$(id).insertAdjacentHTML("beforeend",'<option value="hard">Мои трудные слова</option>'));
+
+/* статистика ответов по словам: из неё собираются «трудные слова» и прогресс */
+let wst=store.get("wst",{});
+function track(w,ok){if(!M[w])return;const s=wst[w]||{ok:0,bad:0,st:0};if(ok){s.ok++;s.st++;}else{s.bad++;s.st=0;}wst[w]=s;store.set("wst",wst);}
+// трудное слово: были ошибки и ещё нет трёх верных ответов подряд
+function hardWords(){return Object.keys(wst).filter(w=>M[w]&&wst[w].bad>0&&wst[w].st<3).sort((a,b)=>wst[b].bad-wst[a].bad||wst[a].st-wst[b].st).slice(0,20);}
 
 /* vocab: порции + интервальные повторения */
 // ассоциации: созвучное русское слово, связанное со смыслом
@@ -497,7 +572,7 @@ function vTask(){
     return;}
   // type
   c.innerHTML=`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это читается? Напиши русскими буквами.</p>
-    <form id="vForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="vIn" lang="ru" aria-label="Чтение слова"><button class="pri" id="vBtn">Проверить</button></form><div id="vFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+    <form id="vForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" id="vIn" lang="ru" aria-label="Чтение слова"><button class="pri" id="vBtn">Проверить</button></form><div id="vFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
   $("vKeys").textContent="Звонкие и глухие (к/г, т/д, п/б, ч/дж) засчитываются оба. Enter — проверить, ещё Enter — дальше.";
   const inp=$("vIn");inp.focus();let checked=null;
   $("vForm").onsubmit=e=>{e.preventDefault();
@@ -510,6 +585,7 @@ function vTask(){
 }
 function vResult(ok){
   if(!ses)return;const t=ses.q.shift();
+  if(t.k!=="intro")track(t.w,ok);
   if(ok)ses.done++;else{ses.fail.add(t.w);ses.q.splice(Math.min(3,ses.q.length),0,t);}
   vTask();
 }
@@ -552,9 +628,12 @@ function krOk(w,v){const s=v.replace(/\s/g,"");if(/[가-힣]/.test(s))return s==
 let pq=null;
 $("pSet").value=store.get("pSet","vocab");$("pSet").onchange=()=>store.set("pSet",$("pSet").value);
 $("pStart").onclick=()=>{const dir=$("pDir").value,ws=shuffle(setWords($("pSet").value));
+  $("pMsg").hidden=!!ws.length;
+  if(!ws.length){$("pMsg").textContent="Трудных слов пока нет. Они появятся, когда ошибёшься в любом режиме.";return;}
   pq={q:ws.map(w=>({w,d:dir==="mix"?(Math.random()<.5?"kr":"ru"):dir})),i:0,ok:0,miss:[],round:1};
   $("pHome").hidden=true;$("pStage").hidden=false;pShow();};
-$("pQuit").onclick=()=>{pq=null;pf=null;$("pStage").hidden=true;$("pHome").hidden=false;};
+$("pTime").value=store.get("pTime","0");$("pTime").onchange=()=>store.set("pTime",$("pTime").value);
+$("pQuit").onclick=()=>{pq=null;pf=null;askTok++;$("pStage").hidden=true;$("pHome").hidden=false;};
 function pShow(){
   const c=$("pCard"),n=pq.q.length;$("pBar").style.width=(pq.i/n*100)+"%";
   if(pq.i>=n){
@@ -567,22 +646,35 @@ function pShow(){
     $("pToHome").onclick=()=>$("pQuit").click();$("pToHome").focus();return;}
   const {w,d}=pq.q[pq.i];
   $("pStep").textContent=`Режим препода${pq.round>1?" · ошибки":""} · ${pq.i+1} / ${n} · верно ${pq.ok}`;
+  askCard(c,w,d,+$("pTime").value,$("pKeys"),ok=>{track(w,ok);if(ok)pq.ok++;else pq.miss.push(pq.q[pq.i]);pq.i++;pShow();});
+}
+
+/* один вопрос препода: слово → перевод вручную, по желанию с таймером */
+let askTok=0;
+function askCard(c,w,d,sec,keysEl,done){
+  const tok=++askTok;
   c.innerHTML=(d==="kr"?`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это по-русски?</p>`
-      :`<div class="front ru">${esc(M[w])}</div><p class="muted">Как это по-корейски?</p>`)+
-    `<form id="pForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="pIn" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri" id="pBtn">Проверить</button></form><div id="pFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
-  $("pKeys").textContent=d==="kr"?"Достаточно одного значения. Мелкие опечатки и окончания (красивый/красивая) засчитываются.":"Пиши корейскими буквами или чтением русскими буквами. Enter — проверить, ещё раз Enter — дальше.";
+      :`<div class="front ru">${esc(M[w])}</div><p class="muted">Как это по-корейски?</p>`)+(sec?`<div class="tbar"><i></i></div>`:"")+
+    `<form class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri">Проверить</button></form><div class="askfb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  keysEl.textContent=(d==="kr"?"Достаточно одного значения. Мелкие опечатки и окончания (красивый/красивая) засчитываются.":"Пиши корейскими буквами или чтением русскими буквами.")+(sec?` На ответ ${sec} сек.`:"")+" Enter — проверить, ещё раз Enter — дальше.";
   if(d==="kr")say(w);
-  const inp=$("pIn");inp.focus();let res=null;
-  const next=ok=>{if(ok)pq.ok++;else pq.miss.push(pq.q[pq.i]);pq.i++;pShow();};
-  $("pForm").onsubmit=e=>{e.preventDefault();
-    if(res!==null)return next(res);
+  const f=c.querySelector("form"),inp=f.querySelector("input"),btn=f.querySelector("button"),fb=c.querySelector(".askfb");
+  let res=null,tmr=null;inp.focus();
+  const finish=ok=>{if(tok!==askTok)return;clearTimeout(tmr);done(ok);};
+  const check=late=>{
+    clearTimeout(tmr);res=late?false:(d==="kr"?ruOk(w,inp.value):krOk(w,inp.value));
+    inp.readOnly=true;inp.classList.add(res?"right":"wrong");const tb=c.querySelector(".tbar");if(tb)tb.hidden=true;
+    fb.innerHTML=`<p class="fb ${res?"right":"wrong"}">${res?"Верно":late?"Время вышло":"Неверно"}</p><div class="front" style="font-size:40px">${w}</div><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div>`+
+      (MN[w]&&!res?`<div class="mn"><b>Запомни:</b> ${esc(MN[w])}</div>`:"")+(res||late?"":`<button class="over">Мой ответ тоже верный, засчитать</button>`);
+    const ov=fb.querySelector(".over");if(ov)ov.onclick=()=>finish(true);
+    btn.textContent="Дальше";btn.focus();say(w);};
+  f.onsubmit=e=>{e.preventDefault();if(tok!==askTok)return;
+    if(res!==null)return finish(res);
     if(!inp.value.trim())return;
-    res=d==="kr"?ruOk(w,inp.value):krOk(w,inp.value);
-    inp.readOnly=true;inp.classList.add(res?"right":"wrong");
-    $("pFb").innerHTML=`<p class="fb ${res?"right":"wrong"}">${res?"Верно":"Неверно"}</p><div class="front" style="font-size:40px">${w}</div><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div>`+
-      (MN[w]&&!res?`<div class="mn"><b>Запомни:</b> ${esc(MN[w])}</div>`:"")+(res?"":`<button id="pOver">Мой ответ тоже верный, засчитать</button>`);
-    if($("pOver"))$("pOver").onclick=()=>next(true);
-    $("pBtn").textContent="Дальше";$("pBtn").focus();say(w);};
+    check(false);};
+  if(sec){const bar=c.querySelector(".tbar i");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition=`width ${sec}s linear`;bar.style.width="0%";}));
+    tmr=setTimeout(()=>{if(tok===askTok&&res===null)check(true);},sec*1000);}
 }
 
 /* работа над ошибками в режиме препода: 4 шага, как в обычном словаре */
@@ -593,7 +685,7 @@ function pFixStart(miss){
   ws.forEach(t=>q.push({...t,k:"intro"}));["mc","rev","ask"].forEach(k=>shuffle(ws).forEach(t=>q.push({...t,k})));
   pf={q,done:0,total:q.length,words:ws};pq=null;pFixShow();
 }
-function pFixNext(ok){if(!pf)return;const t=pf.q.shift();if(ok)pf.done++;else pf.q.splice(Math.min(3,pf.q.length),0,t);pFixShow();}
+function pFixNext(ok){if(!pf)return;const t=pf.q.shift();if(t.k!=="intro")track(t.w,ok);if(ok)pf.done++;else pf.q.splice(Math.min(3,pf.q.length),0,t);pFixShow();}
 function pFixShow(){
   const c=$("pCard");$("pBar").style.width=(pf.done/pf.total*100)+"%";
   if(!pf.q.length){
@@ -625,7 +717,7 @@ function pFixShow(){
   // ask: как в опросе, без подсказок
   c.innerHTML=(d==="kr"?`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Как это по-русски?</p>`
       :`<div class="front ru">${esc(M[w])}</div><p class="muted">Как это по-корейски?</p>`)+
-    `<form id="pfForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go"id="pfIn" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri" id="pfBtn">Проверить</button></form><div id="pfFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+    `<form id="pfForm" class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" id="pfIn" lang="${d==="kr"?"ru":"ko"}" aria-label="Перевод" style="max-width:340px"><button class="pri" id="pfBtn">Проверить</button></form><div id="pfFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
   $("pKeys").textContent="Enter — проверить, ещё раз Enter — дальше. Если ошибёшься, слово вернётся через пару заданий.";
   if(d==="kr")say(w);
   const inp=$("pfIn");inp.focus();let res=null;
@@ -651,14 +743,16 @@ function rdRender(mix){
     return `<div class="box"><h2>${s.name}</h2><div class="list" style="margin-top:8px">${list.map(w=>`<button class="w${lvl(w)>=3?" known":""}" data-w="${w}"><span class="k">${w}</span><span class="r">${readWord(w)}</span><span class="m">${esc(M[w]||"")}</span></button>`).join("")}</div></div>`}).join("");
 }
 $("rdLists").onclick=e=>{const b=e.target.closest(".w");if(!b)return;const open=b.classList.toggle("open");if(open)say(b.dataset.w);};
-$("rdOpen").onclick=()=>document.querySelectorAll(".w").forEach(b=>b.classList.add("open"));
-$("rdClose").onclick=()=>document.querySelectorAll(".w").forEach(b=>b.classList.remove("open"));
+$("rdOpen").onclick=()=>document.querySelectorAll("#rdLists .w").forEach(b=>b.classList.add("open"));
+$("rdClose").onclick=()=>document.querySelectorAll("#rdLists .w").forEach(b=>b.classList.remove("open"));
 $("rdShuffle").onclick=()=>rdRender(true);
 rdRender(false);
 
 /* test */
 let tq=null;
-$("tStart").onclick=()=>{const w=setWords($("tSet").value);tq={q:shuffle(w).slice(0,15),i:0,ok:0,mode:$("tMode").value,pool:allWords,miss:[]};tShow();};
+$("tStart").onclick=()=>{const w=setWords($("tSet").value);
+  if(!w.length){$("tq").innerHTML=`<p class="muted">Трудных слов пока нет. Они появятся, когда ошибёшься в любом режиме.</p>`;return;}
+  tq={q:shuffle(w).slice(0,15),i:0,ok:0,mode:$("tMode").value,pool:allWords,miss:[]};tShow();};
 function tShow(){
   const box=$("tq"),n=tq.q.length;
   if(tq.i>=n){box.innerHTML=`<div class="front ru">${tq.ok} из ${n}</div>${tq.miss.length?`<p class="muted">Повтори эти слова:</p><div class="parts">${tq.miss.map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div>`:`<p class="muted">Без ошибок!</p>`}<button class="pri" id="tAgain">Ещё раз</button>`;
@@ -668,19 +762,164 @@ function tShow(){
   const opts=shuffle([ans,...wrong]);
   box.innerHTML=`<p class="muted score">${tq.i+1} / ${n} · верно ${tq.ok}</p><div class="front">${w}</div><p class="muted">${tq.mode==="mean"?"Что значит это слово?":"Как читается это слово?"}</p><div class="opts">${opts.map(o=>`<button data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
   box.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
-    const right=b.dataset.o===ans;if(right)tq.ok++;else tq.miss.push(w);
+    const right=b.dataset.o===ans;if(right)tq.ok++;else tq.miss.push(w);track(w,right);
     box.querySelectorAll(".opts button").forEach(x=>{x.disabled=true;if(x.dataset.o===ans)x.classList.add("right")});
     if(!right)b.classList.add("wrong");say(w);
     setTimeout(()=>{tq.i++;tShow()},right?800:1800);});
 }
+/* похожие слова */
+const SIM=[
+ {t:"Папа или старший брат",w:["아빠","오빠"],h:"아 «а» — папа, 오 «о» — старший брат."},
+ {t:"Отец и мать",w:["아버지","어머니"],h:"아버지 начинается с ㅏ «а», 어머니 с ㅓ «о»."},
+ {t:"Всё на 사",w:["사다","사자","사과","사다리"],h:"Первый слог одинаковый, смотри на второй: 다 — купить, 자 — лев, 과 — яблоко, 다리 — лестница."},
+ {t:"Нога и утюг",w:["다리","다리미"],h:"다리미 = 다리 + 미: у утюга лишний слог."},
+ {t:"Стул и врач",w:["의자","의사"],h:"자 «джа» — стул, 사 «са» — врач."},
+ {t:"Фирма и врач",w:["회사","의사"],h:"회 «хвэ» — фирма, 의 «ый» — врач."},
+ {t:"Малыш и разговор",w:["애기","얘기"],h:"ㅐ «э» — малыш, ㅒ «йэ» (две чёрточки) — разговор."},
+ {t:"Карта и пособие",w:["지도","지도서"],h:"서 на конце — это книга, значит пособие."},
+ {t:"Всё на 바",w:["바다","바지","바나나"],h:"다 — море, 지 — брюки, 나나 — банан."},
+ {t:"Холодно и жарко",w:["추워요","더워요"],h:"추 «чху» — холодно («чую холод»), 더 «то» — жарко."},
+ {t:"ㅆ и ㅉ",w:["싸다","쓰다","짜다","찌다"],h:"ㅆ «сс»: 싸 — дёшево, 쓰 — писать. ㅉ «чч»: 짜 — солёный, 찌 — на пару."},
+ {t:"Большой и рост",w:["크다","키"],h:"Оба с ㅋ. 크다 — «какой?» (большой), 키 — рост или ключ."},
+ {t:"Всё на 기",w:["기차","기타","기다리다"],h:"차 «чха» — поезд, 타 «тха» — гитара, 다리다 — ждать."},
+ {t:"Туфли и мебель",w:["구두","가구"],h:"구두 «куду» — туфли, 가구 «кагу» — мебель."},
+ {t:"Один слог",w:["새","배","왜","네"],h:"ㅅ — птица, ㅂ — груша, ㅇ+ㅙ — почему, ㄴ — да."},
+ {t:"Певец и ножницы",w:["가수","가위"],h:"수 «су» — певец, 위 «ви» — ножницы."},
+ {t:"Лиса и молоко",w:["여우","우유"],h:"여우 «ёу» — лиса, 우유 «ую» — молоко."},
+ {t:"Глаголы на 다",w:["가다","오다","하다","자다","서다"],h:"Различай первый слог: 가 идти, 오 приходить, 하 делать, 자 спать, 서 стоять."},
+ {t:"Шапка и голова",w:["모자","머리"],h:"모 — ㅗ (шапка), 머 — ㅓ (голова)."}];
+let sm=null;
+$("simList").innerHTML=SIM.map((g,i)=>`<div class="sim"><b>${esc(g.t)}</b><div class="list">${g.w.map(w=>`<button class="w open" data-say="${w}"><span class="k">${w}</span><span class="r">${readWord(w)}</span><span class="m">${esc(M[w])}</span></button>`).join("")}</div><p class="muted" style="font-size:13.5px">${esc(g.h)}</p><button data-g="${i}">Тренировать</button></div>`).join("");
+$("simList").onclick=e=>{const b=e.target.closest("[data-g]");if(!b)return;const g=+b.dataset.g;
+  smStart(shuffle(SIM[g].w.flatMap(w=>[{w,d:"kr",g},{w,d:"ru",g}])),SIM[g].t);};
+$("smAll").onclick=()=>smStart(Array.from({length:20},()=>{const g=Math.random()*SIM.length|0,w=SIM[g].w[Math.random()*SIM[g].w.length|0];return{w,d:Math.random()<.5?"kr":"ru",g};}),"Все пары");
+function smStart(q,label){sm={q,i:0,ok:0,miss:[],label};$("smCard").hidden=false;smShow();$("smCard").scrollIntoView({block:"start",behavior:"smooth"});}
+function smShow(){
+  const c=$("smCard"),n=sm.q.length;
+  if(sm.i>=n){
+    c.innerHTML=`<div class="front ru">${sm.ok} из ${n}</div>`+(sm.miss.length?`<p class="muted">Путаешь:</p><div class="parts">${[...new Set(sm.miss)].map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div>`:`<p class="muted">Ни разу не перепутал(а)!</p>`)+
+      `<div class="row" style="justify-content:center"><button class="pri" id="smAgain">Ещё раз</button><button id="smClose">К парам</button></div>`;
+    const q=sm.q,label=sm.label;$("smAgain").onclick=()=>smStart(shuffle(q),label);$("smClose").onclick=()=>{c.hidden=true;sm=null;};return;}
+  const {w,d,g}=sm.q[sm.i],grp=SIM[g].w,f=d==="kr"?x=>M[x]:x=>x,o=shuffle(grp),ans=f(w);
+  c.innerHTML=`<p class="muted score">${esc(sm.label)} · ${sm.i+1} / ${n} · верно ${sm.ok}</p>`+
+    (d==="kr"?`<div class="front" data-say="${w}" style="cursor:pointer">${w}</div><p class="muted">Что значит это слово?</p>`:`<div class="front ru">${esc(M[w])}</div><p class="muted">Какое это слово?</p>`)+
+    `<div class="opts">${o.map((x,i)=>`<button class="${d==="ru"?"kw":""}" data-i="${i}">${esc(f(x))}</button>`).join("")}</div><div id="smFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  if(d==="kr")say(w);let busy=false;
+  c.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+    if(busy)return;busy=true;const ok=f(o[+b.dataset.i])===ans;track(w,ok);
+    c.querySelectorAll(".opts button").forEach(x=>{x.disabled=true;if(f(o[+x.dataset.i])===ans)x.classList.add("right")});
+    const next=()=>{if(ok)sm.ok++;else sm.miss.push(w);sm.i++;smShow();};
+    if(ok){say(w);setTimeout(next,600);return;}
+    b.classList.add("wrong");say(w);
+    $("smFb").innerHTML=`<div class="front" style="font-size:40px">${w}</div><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div><div class="mn"><b>Как различать:</b> ${esc(SIM[g].h)}</div><button class="pri" id="smGo">Понятно, дальше</button>`;
+    $("smGo").onclick=next;$("smGo").focus();});
+}
+
+/* чтение на время */
+let tr=null,trTok=0;
+$("trStart").onclick=()=>{tr={q:shuffle(RD_WORDS).slice(0,15),i:0,ok:0,miss:[],t:+$("trTime").value};$("trCard").hidden=false;trShow();};
+function trShow(){
+  const c=$("trCard"),n=tr.q.length,tok=++trTok;
+  if(tr.i>=n){
+    c.innerHTML=`<div class="front ru">${tr.ok} из ${n}</div>`+(tr.miss.length?`<p class="muted">Не успел(а) прочитать:</p><div class="parts">${tr.miss.map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div>`:`<p class="muted">Все слова прочитаны верно!</p>`)+
+      `<div class="row" style="justify-content:center"><button class="pri" id="trAgain">Ещё раз</button><button id="trClose">Закрыть</button></div>`;
+    $("trAgain").onclick=()=>$("trStart").click();$("trClose").onclick=()=>{c.hidden=true;};return;}
+  const w=tr.q[tr.i];
+  c.innerHTML=`<p class="muted score">${tr.i+1} / ${n} · верно ${tr.ok}</p><div class="front" id="trW">${w}</div>
+    <form class="row" style="justify-content:center;width:100%" autocomplete="off"><input class="ans" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" lang="ru" aria-label="Чтение слова" placeholder="как читается?"><button class="pri">Проверить</button></form><div class="trfb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+  const f=c.querySelector("form"),inp=f.querySelector("input"),btn=f.querySelector("button"),wEl=$("trW");let res=null;
+  inp.focus();
+  setTimeout(()=>{if(tok===trTok&&res===null){wEl.textContent="• • •";wEl.classList.add("gone");}},tr.t*1000);
+  f.onsubmit=e=>{e.preventDefault();if(tok!==trTok)return;
+    if(res!==null){if(res)tr.ok++;else tr.miss.push(w);tr.i++;return trShow();}
+    if(!inp.value.trim())return;
+    res=rnorm(inp.value)===rnorm(readWord(w));track(w,res);
+    wEl.textContent=w;wEl.classList.remove("gone");inp.readOnly=true;inp.classList.add(res?"right":"wrong");
+    c.querySelector(".trfb").innerHTML=`<p class="fb ${res?"right":"wrong"}">${res?"Верно":"Неверно"}</p><div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div>`;
+    btn.textContent="Дальше";btn.focus();say(w);};
+}
+
+/* экзамен: часть 1 — чтение вслух с самопроверкой, часть 2 — вопросы препода */
+let ex=null;
+$("exTime").value=store.get("exTime","10");$("exTime").onchange=()=>store.set("exTime",$("exTime").value);
+$("exStart").onclick=()=>{
+  ex={p:1,q:shuffle(RD_WORDS).slice(0,10),q2:shuffle(allWords).slice(0,20).map(w=>({w,d:Math.random()<.5?"kr":"ru"})),i:0,ok1:0,ok2:0,miss:[],sec:+$("exTime").value};
+  $("exHome").hidden=true;$("exStage").hidden=false;exShow();};
+$("exQuit").onclick=()=>{ex=null;askTok++;$("exStage").hidden=true;$("exHome").hidden=false;exHist();};
+function exShow(){
+  const c=$("exCard"),tot=ex.q.length+ex.q2.length;
+  if(ex.p===1){
+    if(ex.i>=ex.q.length){ex.p=2;ex.i=0;return exShow();}
+    $("exBar").style.width=(ex.i/tot*100)+"%";
+    const w=ex.q[ex.i];
+    $("exStep").textContent=`Часть 1 · чтение вслух · ${ex.i+1} / ${ex.q.length}`;
+    $("exKeys").textContent="Прочитай слово вслух, как на экзамене. Потом открой ответ и честно отметь.";
+    c.innerHTML=`<div class="front">${w}</div><button class="pri" id="exOpen">Показать чтение</button><div id="exFb" style="display:flex;flex-direction:column;align-items:center;gap:8px"></div>`;
+    $("exOpen").focus();
+    $("exOpen").onclick=()=>{$("exOpen").remove();say(w);
+      $("exFb").innerHTML=`<div class="rd">${readWord(w)}</div><div class="mean">${esc(M[w])}</div><div class="row" style="justify-content:center"><button class="ok" id="exY">Прочитал(а) верно</button><button id="exN">Сбился(ась)</button></div>`;
+      $("exY").onclick=()=>{track(w,true);ex.ok1++;ex.i++;exShow();};
+      $("exN").onclick=()=>{track(w,false);ex.miss.push({w,d:"kr"});ex.i++;exShow();};$("exY").focus();};
+    return;}
+  $("exBar").style.width=((ex.q.length+ex.i)/tot*100)+"%";
+  if(ex.i>=ex.q2.length)return exFinish();
+  const {w,d}=ex.q2[ex.i];
+  $("exStep").textContent=`Часть 2 · препод спрашивает · ${ex.i+1} / ${ex.q2.length}`;
+  askCard(c,w,d,ex.sec,$("exKeys"),ok=>{track(w,ok);if(ok)ex.ok2++;else ex.miss.push({w,d});ex.i++;exShow();});
+}
+function exFinish(){
+  const tot=ex.q.length+ex.q2.length,ok=ex.ok1+ex.ok2,pct=Math.round(ok/tot*100);
+  const grade=pct>=90?"отлично":pct>=75?"хорошо":pct>=60?"удовлетворительно":"надо подтянуть";
+  const hist=store.get("exHist",[]);hist.unshift({t:Date.now(),pct,r:`${ex.ok1}/${ex.q.length}`,a:`${ex.ok2}/${ex.q2.length}`});store.set("exHist",hist.slice(0,10));
+  $("exBar").style.width="100%";$("exStep").textContent="Экзамен · итог";$("exKeys").textContent="";
+  const miss=ex.miss,uniq=[...new Set(miss.map(m=>m.w))];
+  $("exCard").innerHTML=`<div class="front ru">${pct}% · ${grade}</div><p class="muted">Чтение: ${ex.ok1} из ${ex.q.length}. Перевод: ${ex.ok2} из ${ex.q2.length}.</p>`+
+    (miss.length?`<p class="muted">Слабые места:</p><div class="parts">${uniq.map(w=>`<span><span class="k">${w}</span> ${readWord(w)} · ${esc(M[w])}</span>`).join("")}</div><div class="row" style="justify-content:center"><button class="pri" id="exFix">Работа над ошибками (${uniq.length})</button><button id="exDone">Готово</button></div><p class="muted" style="font-size:13px">Эти слова пройдут 4 шага, как в обычном словаре, а потом препод спросит их снова.</p>`
+      :`<p class="muted">Ни одной ошибки. Можно идти на экзамен!</p><button class="pri" id="exDone">Готово</button>`);
+  ex=null;
+  $("exDone").onclick=()=>$("exQuit").click();$("exDone").focus();
+  if($("exFix"))$("exFix").onclick=()=>{$("exStage").hidden=true;$("exHome").hidden=false;goTab("teach");$("pHome").hidden=true;$("pStage").hidden=false;pFixStart(miss);};
+}
+const fmtDate=t=>new Date(t).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+function exHist(){const h=store.get("exHist",[]);
+  $("exHist").innerHTML=h.length?`<h2 style="font-size:16px">Прошлые попытки</h2><div class="hist">${h.slice(0,5).map(x=>`<div>${fmtDate(x.t)} — <b>${x.pct}%</b> · чтение ${x.r} · перевод ${x.a}</div>`).join("")}</div>`:"";}
+exHist();
+
+/* прогресс */
+function prRender(){
+  const all=allWords,learned=all.filter(w=>lvl(w)>=3).length,learning=all.filter(w=>lvl(w)>0&&lvl(w)<3).length,due=all.filter(isDue).length;
+  const [ok,bad]=Object.values(wst).reduce((a,s)=>[a[0]+s.ok,a[1]+s.bad],[0,0]),acc=ok+bad?Math.round(ok/(ok+bad)*100):null;
+  const lb=store.get("lqBestBase",null),ld=store.get("lqBestDiph",null),hard=hardWords(),hist=store.get("exHist",[]);
+  const bar=(g,y,t)=>`<div class="pb"><i class="g" style="width:${g/t*100}%"></i><i class="y" style="width:${y/t*100}%"></i></div>`;
+  $("prBox").innerHTML=`
+  <div class="stats"><div><b>${Math.round(learned/all.length*100)}%</b><span>слов выучено (${learned} из ${all.length})</span></div><div><b>${learning}</b><span>учу</span></div><div><b>${due}</b><span>ждут повторения</span></div><div><b>${acc===null?"—":acc+"%"}</b><span>верных ответов (${ok+bad})</span></div></div>
+  ${bar(learned,learning,all.length)}
+  <div class="row">${due?`<button class="ok" id="prDue">Повторить сейчас (${due})</button>`:""}<button class="pri" id="prExam">К экзамену</button></div>
+  <div class="box pr"><h2>Буквы</h2>
+    <div class="prow"><span>Согласные и обычные гласные</span><span class="num">${lb===null?"тест не пройден":lb+" из "+LQ.length}</span>${lb===null?"":bar(lb,0,LQ.length)}</div>
+    <div class="prow"><span>Дифтонги</span><span class="num">${ld===null?"тест не пройден":ld+" из "+LQ2.length}</span>${ld===null?"":bar(ld,0,LQ2.length)}</div></div>
+  <div class="box pr"><h2>Слова по спискам</h2><p class="muted" style="font-size:13px">Зелёный — выучено, жёлтый — учишь.</p>
+    ${SETS.filter(s=>s.id!=="all").map(s=>{const ws=setWords(s.id),l=ws.filter(w=>lvl(w)>=3).length,m=ws.filter(w=>lvl(w)>0&&lvl(w)<3).length;
+      return `<div class="prow"><span>${esc(s.name)}</span><span class="num">${l} из ${ws.length}</span>${bar(l,m,ws.length)}</div>`;}).join("")}</div>
+  <div class="box pr"><h2>Мои трудные слова</h2>
+    ${hard.length?`<div class="list">${hard.map(w=>`<button class="w open" data-say="${w}"><span class="k">${w}</span><span class="r">${readWord(w)}</span><span class="m">${esc(M[w])} · ошибок: ${wst[w].bad}</span></button>`).join("")}</div>
+      <div class="row"><button class="pri" id="prHard">Прогнать трудные слова</button></div><p class="muted" style="font-size:13px">Слово уходит из списка после трёх верных ответов подряд.</p>`
+      :`<p class="muted">Пока пусто. Сюда попадают слова, в которых ты ошибался(ась) в любом режиме.</p>`}</div>
+  <div class="box pr"><h2>Экзамены</h2>${hist.length?`<div class="hist">${hist.slice(0,5).map(x=>`<div>${fmtDate(x.t)} — <b>${x.pct}%</b> · чтение ${x.r} · перевод ${x.a}</div>`).join("")}</div>`:`<p class="muted">Генеральную репетицию ещё не проходил(а).</p>`}</div>`;
+  if($("prDue"))$("prDue").onclick=()=>{$("cSet").value="all";store.set("cSet","all");goTab("cards");$("vReview").click();};
+  $("prExam").onclick=()=>goTab("exam");
+  if($("prHard"))$("prHard").onclick=()=>{goTab("teach");$("pQuit").click();$("pSet").value="hard";$("pStart").click();};
+}
+
 /* телефон: убираем подсказки про клавиатуру и не прячем поле ввода под экранной клавиатурой */
 if(matchMedia("(hover:none)").matches){
-  ["vKeys","pKeys"].forEach(id=>{const el=$(id);new MutationObserver(()=>{
+  ["vKeys","pKeys","exKeys"].forEach(id=>{const el=$(id);new MutationObserver(()=>{
     const t=el.textContent.split(/(?<=[.!])\s+/).filter(s=>!/Enter|Клавиш|Пробел/.test(s)).join(" ");
     if(t!==el.textContent)el.textContent=t;}).observe(el,{childList:true,characterData:true,subtree:true});});
   document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("ans"))setTimeout(()=>e.target.scrollIntoView({block:"center",behavior:"smooth"}),300);});
 }
 window.appReady=true;
+if(!$("progress").hidden)prRender();
 </script>
 
 </body>
